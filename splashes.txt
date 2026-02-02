@@ -1,0 +1,12 @@
+morally ambiguous at best
+none of the thoughts or views represented here are my own
+i told you about stairs bro
+Segmentation fault (core dumped)
+index out of bounds: the len is 3 but the index is 99 stack backtrace: 0: rust_begin_unwind at /rustc/4d91de4e48198da2e33413efdcd9cd2cc0c46688/library/std/src/panicking.rs:692:5 1: core::panicking::panic_fmt
+carol knight truther
+hey guys jerma985 here
+oohhhhh banana
+is that your fursona?
+30 trillion cells in a trenchcoat
+:w
+listening to: nom nom nom song (clean version) (with lyrics)

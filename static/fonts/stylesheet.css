@@ -1,0 +1,60 @@
+@font-face {
+    font-family: '0xProto Nerd Font Propo';
+    src: local('0xProto Nerd Font Propo Bold'), local('0xProtoNFP-Bold'),
+        url('0xProtoNFP-Bold.woff2') format('woff2'),
+        url('0xProtoNFP-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '0xProto Nerd Font Propo';
+    src: local('0xProto Nerd Font Propo Italic'), local('0xProtoNFP-Italic'),
+        url('0xProtoNFP-Italic.woff2') format('woff2'),
+        url('0xProtoNFP-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '0xProto Nerd Font Mono';
+    src: local('0xProto Nerd Font Mono Bold'), local('0xProtoNFM-Bold'),
+        url('0xProtoNFM-Bold.woff2') format('woff2'),
+        url('0xProtoNFM-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '0xProto Nerd Font Mono';
+    src: local('0xProto Nerd Font Mono Italic'), local('0xProtoNFM-Italic'),
+        url('0xProtoNFM-Italic.woff2') format('woff2'),
+        url('0xProtoNFM-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '0xProto Nerd Font Propo';
+    src: local('0xProto Nerd Font Propo'), local('0xProtoNFP-Regular'),
+        url('0xProtoNFP-Regular.woff2') format('woff2'),
+        url('0xProtoNFP-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '0xProto Nerd Font Mono';
+    src: local('0xProto Nerd Font Mono'), local('0xProtoNFM-Regular'),
+        url('0xProtoNFM-Regular.woff2') format('woff2'),
+        url('0xProtoNFM-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
