@@ -183,7 +183,8 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb) {
     loop {
-        //TODO have a channel for signaling that a post fetch failed
+        //TODO have a channel for signaling that a post fetch failed so we can try a refresh before
+        // returning an error
         if let Ok(str) = fetch_url(&json_posts_url).await
             && let Ok(json) = json::parse(&str)
             && let JsonValue::Array(posts) = &json["posts"]

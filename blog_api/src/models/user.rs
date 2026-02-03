@@ -20,13 +20,17 @@ impl ToSql for UserId {
 #[derive(Debug)]
 pub struct User {
     id: UserId,
+    display_name: String,
     token: String,
+    color: Color,
 }
 impl User {
     pub fn from_row(row: &rusqlite::Row<'_>) -> Result<Self, rusqlite::Error> {
         Ok(Self {
             id: row.get(0)?,
-            token: row.get(1)?,
+            display_name: row.get(1)?,
+            token: row.get(3)?,
+            color: row.get(4)?,
         })
     }
 
@@ -35,5 +39,42 @@ impl User {
     }
     pub fn get_token(&self) -> &str {
         &self.token
+    }
+    pub fn get_color(&self) -> Color {
+        self.color
+    }
+    pub fn get_display_name(&self) -> &str {
+        &self.display_name
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct Color(u32);
+
+impl Color {
+    pub const WHITE: Color = Color(u32::MAX);
+}
+
+impl std::fmt::Debug for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let bytes = self.0.to_be_bytes();
+        f.write_fmt(format_args!(
+            "Color: #{:x}{:x}{:x}",
+            bytes[0], bytes[1], bytes[2]
+        ))
+    }
+}
+
+impl std::fmt::Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let bytes = self.0.to_ne_bytes();
+        f.write_fmt(format_args!("#{:x}{:x}{:x}", bytes[0], bytes[1], bytes[2]))
+    }
+}
+
+impl FromSql for Color {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        let color_int = value.as_i64()? as u32;
+        Ok(Color(color_int))
     }
 }

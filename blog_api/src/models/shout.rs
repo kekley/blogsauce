@@ -38,7 +38,7 @@ impl ToSql for ShoutId {
 /// The struct also includes some data for tracking whether or not the comment has been edited, and
 /// the stored date will represent either the creation or edit date
 #[derive(Debug)]
-pub struct Comment {
+pub struct Shout {
     id: ShoutId,
     user_id: UserId,
     content: String,
@@ -46,7 +46,7 @@ pub struct Comment {
     posted_on: DateTime,
 }
 
-impl Comment {
+impl Shout {
     pub fn get_content(&self) -> &str {
         &self.content
     }
@@ -62,7 +62,7 @@ impl Comment {
         self.edited
     }
     pub fn from_row(row: &rusqlite::Row<'_>) -> Result<Self, rusqlite::Error> {
-        Ok(Comment {
+        Ok(Shout {
             id: row.get(0)?,
             user_id: row.get(1)?,
             content: (row.get::<usize, String>(2)?),

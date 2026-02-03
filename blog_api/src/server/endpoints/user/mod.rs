@@ -14,6 +14,39 @@ use crate::{
     },
 };
 
+pub(crate) async fn verify_token(
+    request: Request<hyper::body::Incoming>,
+    addr: IpAddr,
+    db: CommentDb,
+) -> Result<Response<Full<Bytes>>, RequestError> {
+    let mut response_object = object! {};
+    match *request.method() {
+        Method::OPTIONS => Ok(options_response()),
+        Method::POST => {
+            let Ok(json) = request_to_json(request).await else {
+                response_object["error"] = "Invalid JSON in body".into();
+                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
+            };
+            if let Some(token) = json["token"].as_str()
+                && let Ok(_) = db.get_user_from_token(token)
+            {
+                response_object["is_valid"] = true.into();
+                Ok(json_to_response(response_object, StatusCode::OK))
+            } else {
+                response_object["is_valid"] = false.into();
+                Ok(json_to_response(response_object, StatusCode::OK))
+            }
+        }
+        _ => {
+            eprintln!("IP: {addr} Invalid Method on verify user endpoint");
+            Ok(json_to_response(
+                response_object,
+                StatusCode::METHOD_NOT_ALLOWED,
+            ))
+        }
+    }
+}
+
 pub(crate) async fn get_user_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
@@ -25,13 +58,13 @@ pub(crate) async fn get_user_endpoint_post(
         Method::POST => {
             let json = request_to_json(request).await?;
 
-            if let Some(user) = json["user"].as_str() {
+            if let Some(user) = json["display_name"].as_str() {
                 let mut buf = [0u8; 16];
                 match OsRng.try_fill_bytes(&mut buf) {
                     Ok(_) => {}
                     Err(err) => {
                         eprintln!("IP: {addr}: failed to generate user token : {err}");
-                        response_object["error"] = "Error assigning user id :( ".into();
+                        response_object["error"] = "Error generating user token".into();
                     }
                 }
 
@@ -45,7 +78,7 @@ pub(crate) async fn get_user_endpoint_post(
                     Ok(_) => {}
                     Err(err) => {
                         eprintln!("IP: {addr}: error adding user: {err}");
-                        response_object["error"] = "Error creating user".into();
+                        response_object["error"] = "NAME_TAKEN".into();
                         return Ok(json_to_response(response_object, StatusCode::IM_A_TEAPOT));
                     }
                 };

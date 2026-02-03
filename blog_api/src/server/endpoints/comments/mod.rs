@@ -38,7 +38,6 @@ pub(crate) async fn post_comment_endpoint_post(
                     response_object["error"] = "Missing post identifier".into();
                     return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
                 }
-
                 let Some(content) = json["content"].as_str() else {
                     response_object["error"] = "Missing comment content".into();
                     return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
@@ -57,10 +56,7 @@ pub(crate) async fn post_comment_endpoint_post(
                 };
 
                 match db.add_comment(post.get_id(), user.get_id(), content) {
-                    Ok(_) => {
-                        response_object["user"] = token.into();
-                        Ok(json_to_response(response_object, StatusCode::OK))
-                    }
+                    Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
                     Err(_err) => {
                         response_object["error"] = "Error posting comment".into();
                         Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
@@ -217,63 +213,60 @@ pub(crate) async fn get_comments_endpoint_post(
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let Some(query) = request.uri().query() else {
-                response_object["error"] = "Missing URI query".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            let Some(post_ident) = extract_key_from_query(query, "post") else {
-                response_object["error"] = "Missing 'post' field".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            let post_ident = post_ident.to_string();
             let Ok(json) = request_to_json(request).await else {
                 response_object["error"] = "Invalid JSON in body".into();
+                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
+            };
+            let json::JsonValue::Array(posts) = json["post_idents"] else {
+                response_object["error"] = "Missing 'posts' field".into();
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
 
             if let Some(token) = json["token"].as_str()
                 && let Ok(user) = db.get_user_from_token(token)
             {
-                let post = match db.get_post_with_ident(&post_ident) {
-                    Ok(post) => post,
-                    Err(_err) => {
-                        response_object["error"] = "could not fetch comments".into();
-                        return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
+                let mut posts_response = Vec::with_capacity(posts.len());
+                let post_idents_iter = posts.into_iter().flat_map(|json_value| json_value.as_str());
+                for post_ident in post_idents_iter {
+                    let post = match db.get_post_with_ident(&post_ident) {
+                        Ok(post) => post,
+                        Err(_err) => {
+                            response_object["error"] = "could not fetch comments".into();
+                            return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
+                        }
+                    };
+
+                    let comments = match db.get_post_comments(post.get_id()) {
+                        Ok(comments) => comments,
+                        Err(_err) => {
+                            response_object["error"] = "could not fetch comments".into();
+                            return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
+                        }
+                    };
+                    let star_count = db.get_post_star_count(post.get_id()).unwrap_or_default();
+
+                    let mut post_json = object! {comments:[],stars:0};
+
+                    for comment in comments {
+                        let mut comment_json = object! {};
+                        comment_json["id"] = comment.get_id().into();
+                        comment_json["username"] = comment.get_display_name().into();
+                        comment_json["content"] = comment.get_content().into();
+                        comment_json["editable"] = (comment.get_user_id() == user.get_id()).into();
+                        comment_json["created"] = comment.get_datetime().to_string().into();
+                        comment_json["edited"] = comment.was_edited().into();
+                        let _ = post_json["comments"].push(comment_json);
                     }
-                };
 
-                let comments = match db.get_post_comments(post.get_id()) {
-                    Ok(comments) => comments,
-                    Err(_err) => {
-                        response_object["error"] = "could not fetch comments".into();
-                        return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                    }
-                };
-                let star_count = db.get_post_star_count(post.get_id()).unwrap_or_default();
+                    post_json["stars"] = star_count.into();
 
-                let mut post_json = object! {comments:[],stars:0};
-
-                for comment in comments {
-                    let mut comment_json = object! {};
-                    comment_json["id"] = comment.get_id().into();
-                    comment_json["username"] = comment.get_display_name().into();
-                    comment_json["content"] = comment.get_content().into();
-                    comment_json["editable"] = (comment.get_user_id() == user.get_id()).into();
-                    comment_json["created"] = comment.get_datetime().to_string().into();
-                    comment_json["edited"] = comment.was_edited().into();
-                    let _ = post_json["comments"].push(comment_json);
+                    post_json["starrable"] =
+                        match db.is_post_starred_by(post.get_id(), user.get_id()) {
+                            Ok(starable) => !starable,
+                            Err(_err) => true,
+                        }
+                        .into();
                 }
-
-                post_json["stars"] = star_count.into();
-
-                post_json["starrable"] =
-                    match db.is_post_starred_by(post.get_id(), user.get_id()) {
-                        Ok(starable) => !starable,
-                        Err(_err) => true,
-                    }
-                    .into();
-
-                response_object["post"] = post_json;
                 Ok(json_to_response(response_object, StatusCode::OK))
             } else {
                 todo!();

@@ -7,7 +7,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use thiserror::Error;
 
-use crate::models::shout::ShoutId;
+use crate::models::shout::{Shout, ShoutId};
 use crate::models::user::{User, UserId};
 use crate::models::{
     comment::{Comment, CommentId},
@@ -162,6 +162,28 @@ impl CommentDb {
         statement.query_one((token,), User::from_row)
     }
 
+    pub fn get_shout_from_id(&self, shout_id: i64) -> Result<Shout, rusqlite::Error> {
+        let mut row = self
+            .conn
+            .prepare(GET_SHOUT_WITH_ID)
+            .expect("Prepared statement for getting shout should be valid SQL");
+
+        row.query_one((shout_id,), Shout::from_row)
+    }
+
+    pub fn get_all_shouts(&self) -> Result<Vec<Shout>, rusqlite::Error> {
+        let mut shouts_statement = self
+            .conn
+            .prepare(GET_ALL_SHOUTS)
+            .expect("SQL statement for getting comments should be valid");
+
+        let comment_rows = shouts_statement.query_map((), Shout::from_row)?;
+
+        Ok(comment_rows
+            .flat_map(|result| result.ok())
+            .collect::<Vec<_>>())
+    }
+
     pub fn add_shout(&self, user_id: UserId, content: &str) -> Result<(), rusqlite::Error> {
         let content = ammonia::clean(content);
         let mut statement = self.conn.prepare(INSERT_SHOUT)?;
@@ -181,5 +203,14 @@ impl CommentDb {
         statement.execute((shout_id,))?;
 
         Ok(())
+    }
+
+    pub(crate) fn get_user_by_id(&self, user_id: UserId) -> Result<User, rusqlite::Error> {
+        let mut row = self
+            .conn
+            .prepare(GET_USER_BY_ID)
+            .expect("Prepared statement for getting user should be valid SQL");
+
+        row.query_one((user_id,), User::from_row)
     }
 }

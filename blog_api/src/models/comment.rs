@@ -42,17 +42,12 @@ pub struct Comment {
     id: CommentId,
     posted_under: PostId,
     user_id: UserId,
-    display_name: String,
     content: String,
     edited: bool,
     posted_on: DateTime,
 }
 
 impl Comment {
-    pub fn get_display_name(&self) -> &str {
-        &self.display_name
-    }
-
     pub fn get_content(&self) -> &str {
         &self.content
     }
@@ -74,10 +69,9 @@ impl Comment {
             id: row.get(0)?,
             posted_under: row.get(1)?,
             user_id: row.get(2)?,
-            display_name: (row.get::<usize, String>(3)?),
-            content: (row.get::<usize, String>(4)?),
-            edited: row.get(5)?,
-            posted_on: row.get(6)?,
+            content: (row.get::<usize, String>(3)?),
+            edited: row.get(4)?,
+            posted_on: row.get(5)?,
         })
     }
 
