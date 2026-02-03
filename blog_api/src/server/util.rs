@@ -16,11 +16,12 @@ pub(crate) fn options_response() -> Response<Full<Bytes>> {
         .body(Full::new(Bytes::new()))
         .expect("OPTIONS response should be valid")
 }
-pub(crate) fn extract_post_identifier(query: &str) -> Option<Cow<'_, str>> {
+
+pub(crate) fn extract_key_from_query<'a>(query: &'a str, key: &str) -> Option<Cow<'a, str>> {
     query
         .split("&")
         .flat_map(|pair| pair.split_once("="))
-        .find(|(key, _)| key.eq(&"post"))
+        .find(|(query_key, _)| query_key.eq(&key))
         .and_then(|(_, value)| urlencoding::decode(value).ok())
 }
 pub(crate) fn json_to_response(json: JsonValue, status_code: StatusCode) -> Response<Full<Bytes>> {

@@ -9,7 +9,7 @@ use crate::{
     db::CommentDb,
     server::{
         RequestError,
-        util::{extract_post_identifier, json_to_response, options_response, request_to_json},
+        util::{extract_key_from_query, json_to_response, options_response, request_to_json},
     },
 };
 //function names: path+'endpoint'+method
@@ -221,7 +221,7 @@ pub(crate) async fn get_comments_endpoint_post(
                 response_object["error"] = "Missing URI query".into();
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
-            let Some(post_ident) = extract_post_identifier(query) else {
+            let Some(post_ident) = extract_key_from_query(query, "post") else {
                 response_object["error"] = "Missing 'post' field".into();
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
