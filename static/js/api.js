@@ -67,15 +67,162 @@ export async function verify_token(token){
     } catch (e) {
        console.log(e);
        return {
-            "error" : "unknown"
        };
     }
 }
 
 export async function getComments(post_list){
-    
+     const info = {
+        "posts" : post_list,
+     };
+    const location = API_URL + `/getComments`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });
+    try {
+         if(!response.ok){
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const response_json = response.json();
+        console.log(response_json);
+        return response_json;
+           
+        } catch (e) {
+           console.log(e);
+           return {};
+    }
+
 }
 
+export async function changeColor(token, color){
+    const info = {
+        "token" : token,
+        "color" : color
+    };
+    const location = API_URL + `/changeColor`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });
+    try {
+         if(!response.ok){
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const response_json = response.json();
+        console.log(response_json);
+        return response_json;
+        } catch (e) {
+           console.log(e);
+           return {};
+    }
+
+}
+
+export async function star(post, token){}
+
+export async function edit_comment(comment_id,token,content){
+    const info = {
+        "comment_id" : comment_id,
+        "token" : token,
+        "content" : content,
+    };
+
+    const location = API_URL + `/editComment`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });
+    try {
+     if(!response.ok){
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const response_json = response.json();
+    console.log(response_json);
+    return response_json;
+       
+    } catch (e) {
+       console.log(e);
+       return {};
+    }
+}
+
+export async function delete_comment(comment_id,token){
+     const info = {
+        "comment_id" : comment_id,
+        "token" : token,
+    };
+
+    const location = API_URL + `/deleteComment`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });   
+    try {
+     if(!response.ok){
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const response_json = response.json();
+    console.log(response_json);
+    return response_json;
+       
+    } catch (e) {
+       console.log(e);
+       return {};
+    }
+}
+
+export async function post_comment(token,content){
+     const info = {
+        "token" : token,
+        "content" : content,
+    };
+
+    const location = API_URL + `/postComment`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });   
+    try {
+     if(!response.ok){
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const response_json = response.json();
+    console.log(response_json);
+    return response_json;
+       
+    } catch (e) {
+       console.log(e);
+       return {};
+    }
+}
+
+export async function 
 
 export async function register_display_name(display_name){
      const info = {

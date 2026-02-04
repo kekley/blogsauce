@@ -217,7 +217,7 @@ pub(crate) async fn get_comments_endpoint_post(
                 response_object["error"] = "Invalid JSON in body".into();
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
-            let json::JsonValue::Array(posts) = json["post_idents"] else {
+            let json::JsonValue::Array(posts) = &json["post_idents"] else {
                 response_object["error"] = "Missing 'posts' field".into();
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
@@ -226,7 +226,7 @@ pub(crate) async fn get_comments_endpoint_post(
                 && let Ok(user) = db.get_user_from_token(token)
             {
                 let mut posts_response = Vec::with_capacity(posts.len());
-                let post_idents_iter = posts.into_iter().flat_map(|json_value| json_value.as_str());
+                let post_idents_iter = posts.iter().flat_map(|json_value| json_value.as_str());
                 for post_ident in post_idents_iter {
                     let post = match db.get_post_with_ident(&post_ident) {
                         Ok(post) => post,
@@ -250,7 +250,7 @@ pub(crate) async fn get_comments_endpoint_post(
                     for comment in comments {
                         let mut comment_json = object! {};
                         comment_json["id"] = comment.get_id().into();
-                        comment_json["username"] = comment.get_display_name().into();
+                        comment_json["username"] = todo!();
                         comment_json["content"] = comment.get_content().into();
                         comment_json["editable"] = (comment.get_user_id() == user.get_id()).into();
                         comment_json["created"] = comment.get_datetime().to_string().into();
@@ -266,6 +266,7 @@ pub(crate) async fn get_comments_endpoint_post(
                             Err(_err) => true,
                         }
                         .into();
+                    posts_response.push(post_json);
                 }
                 Ok(json_to_response(response_object, StatusCode::OK))
             } else {

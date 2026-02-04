@@ -209,7 +209,28 @@ pub(crate) async fn get_shouts_endpoint_get(
             Ok(json_to_response(response_object, StatusCode::OK))
         }
         _ => {
-            eprintln!("IP: {addr} Invalid Method on Shout Post endpoint");
+            eprintln!("IP: {addr} Invalid Method on get shouts endpoint");
+            Ok(json_to_response(
+                response_object,
+                StatusCode::METHOD_NOT_ALLOWED,
+            ))
+        }
+    }
+}
+
+pub(crate) async fn new_shouts_endpoint_get(
+    request: Request<hyper::body::Incoming>,
+    addr: IpAddr,
+    db: CommentDb,
+) -> Result<Response<Full<Bytes>>, RequestError> {
+    let mut response_object = object! {};
+    match *request.method() {
+        Method::OPTIONS => Ok(options_response()),
+        Method::GET => {
+            todo!();
+        }
+        _ => {
+            eprintln!("IP: {addr} Invalid Method on new shouts endpoint");
             Ok(json_to_response(
                 response_object,
                 StatusCode::METHOD_NOT_ALLOWED,

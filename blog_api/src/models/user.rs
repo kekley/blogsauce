@@ -1,5 +1,7 @@
 use rusqlite::{ToSql, types::FromSql};
 
+use crate::models::ip::TruncatedIp;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UserId(i64);
 
@@ -23,14 +25,18 @@ pub struct User {
     display_name: String,
     token: String,
     color: Color,
+    banned: bool,
+    associated_ip: TruncatedIp,
 }
 impl User {
     pub fn from_row(row: &rusqlite::Row<'_>) -> Result<Self, rusqlite::Error> {
         Ok(Self {
             id: row.get(0)?,
             display_name: row.get(1)?,
-            token: row.get(3)?,
-            color: row.get(4)?,
+            token: row.get(2)?,
+            color: row.get(3)?,
+            banned: row.get(4)?,
+            associated_ip: row.get(5)?,
         })
     }
 

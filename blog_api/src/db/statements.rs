@@ -1,15 +1,19 @@
 //Users
 pub const CREATE_USER_TABLE: &str = "CREATE TABLE IF NOT EXISTS users(
-        id INTEGER NOT NULL,
+        id INTEGER NOT NULL PRIMARY KEY,
         display_name TEXT NOT NULL,
         token TEXT NOT NULL UNIQUE,
-        color INTEGER NOT NULL,
-        PRIMARY KEY (id,display_name)
+        color INTEGER NOT NULL DEFAULT 0,
+        banned INTEGER NOT NULL DEFAULT 0,
+        associated_ip INTEGER NOT NULL,
         UNIQUE (display_name COLLATE NOCASE)
+        UNIQUE (token COLLATE NOCASE)
+        FOREIGN KEY (associated_ip) REFERENCES ips(id)
     )";
-pub const GET_USER_BY_TOKEN: &str = "SELECT * FROM users WHERE token=?";
+pub const GET_USER_BY_TOKEN: &str = "SELECT * FROM users WHERE LOWER(token) LIKE LOWER(?)";
 pub const GET_USER_BY_ID: &str = "SELECT * FROM users WHERE id=?";
-pub const INSERT_USER: &str = "INSERT INTO users (id,display_name,token,color) VALUES (NULL,?,?,?)";
+pub const INSERT_USER: &str =
+    "INSERT INTO users (id,display_name,token,color,associated_ip) VALUES (NULL,?,?,?,?)";
 
 //Post SQL
 pub const CREATE_POST_TABLE: &str = "CREATE TABLE IF NOT EXISTS posts (
@@ -53,7 +57,7 @@ pub const GET_COMMENT_WITH_ID: &str = "SELECT * FROM comments WHERE (id=?)";
 
 //Shouts SQL
 pub const CREATE_SHOUTS_TABLE: &str = "CREATE TABLE IF NOT EXISTS shouts (
-        id INTEGER NOT NULL PRIMARY KEY,
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         content TEXT NOT NULL,
         edited INTEGER NOT NULL DEFAULT 0,

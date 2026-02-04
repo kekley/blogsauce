@@ -5,8 +5,10 @@ use std::{path::Path, str};
 
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
+use rand::Rng;
 use thiserror::Error;
 
+use crate::models::ip::TruncatedIp;
 use crate::models::shout::{Shout, ShoutId};
 use crate::models::user::{User, UserId};
 use crate::models::{
@@ -50,7 +52,6 @@ impl CommentDb {
         temp_conn
             .execute(CREATE_SHOUTS_TABLE, ())
             .expect("Failed to create shouts table");
-
         Arc::new(sqlite_pool)
     }
     pub fn from_pooled_conn(conn: PooledConnection<SqliteConnectionManager>) -> Self {
@@ -151,9 +152,16 @@ impl CommentDb {
             .is_ok())
     }
 
-    pub fn add_user(&self, display_name: &str, secret: &str) -> Result<(), rusqlite::Error> {
+    pub fn add_user(
+        &self,
+        display_name: &str,
+        token: &str,
+        ip: TruncatedIp,
+    ) -> Result<(), rusqlite::Error> {
         let mut statement = self.conn.prepare(INSERT_USER)?;
-        statement.execute((display_name, secret))?;
+        let mut rng = rand::rng();
+        let color: u32 = rng.random();
+        statement.execute((display_name, token, color, ip))?;
         Ok(())
     }
 

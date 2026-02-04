@@ -8,13 +8,14 @@ use rand::{TryRngCore as _, rngs::OsRng};
 
 use crate::{
     db::CommentDb,
+    models::ip::TruncatedIp,
     server::{
         RequestError,
         util::{json_to_response, options_response, request_to_json},
     },
 };
 
-pub(crate) async fn verify_token(
+pub(crate) async fn verify_token_endpoint_get(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
@@ -28,7 +29,7 @@ pub(crate) async fn verify_token(
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
             if let Some(token) = json["token"].as_str()
-                && let Ok(_) = db.get_user_from_token(token)
+                && let Ok(_) = dbg!(db.get_user_from_token(dbg!(token)))
             {
                 response_object["is_valid"] = true.into();
                 Ok(json_to_response(response_object, StatusCode::OK))
@@ -46,12 +47,33 @@ pub(crate) async fn verify_token(
         }
     }
 }
+pub(crate) async fn change_color_endpoint_post(
+    request: Request<hyper::body::Incoming>,
+    addr: IpAddr,
+    db: CommentDb,
+) -> Result<Response<Full<Bytes>>, RequestError> {
+    let mut response_object = object! {};
+    match *request.method() {
+        Method::OPTIONS => Ok(options_response()),
+        Method::POST => {
+            todo!()
+        }
+        _ => {
+            eprintln!("IP: {addr} Invalid Method on verify user endpoint");
+            Ok(json_to_response(
+                response_object,
+                StatusCode::METHOD_NOT_ALLOWED,
+            ))
+        }
+    }
+}
 
 pub(crate) async fn get_user_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
 ) -> Result<Response<Full<Bytes>>, RequestError> {
+    let truncated_ip = TruncatedIp::new(addr);
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -74,7 +96,7 @@ pub(crate) async fn get_user_endpoint_post(
                     let _ = write!(&mut token, "{byte:02X}");
                 }
 
-                match db.add_user(user, &token) {
+                match db.add_user(user, &token, truncated_ip) {
                     Ok(_) => {}
                     Err(err) => {
                         eprintln!("IP: {addr}: error adding user: {err}");
