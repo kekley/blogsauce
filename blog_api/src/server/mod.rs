@@ -71,7 +71,7 @@ pub async fn handle_request(
         "/editComment" => edit_comment_endpoint_post(request, addr, db).await,
         "/deleteComment" => delete_comment_endpoint_post(request, addr, db).await,
         "/postComment" => post_comment_endpoint_post(request, addr, db).await,
-        "/newShouts" => new_shouts_endpoint_get(request, addr, db).await,
+        "/subscribeShouts" => new_shouts_endpoint_get(request, addr, db, todo!()).await,
         "/getShouts" => get_shouts_endpoint_get(request, addr, db).await,
         "/postShout" => post_shout_endpoint_post(request, addr, db).await,
         "/editShout" => edit_shout_endpoint_post(request, addr, db).await,

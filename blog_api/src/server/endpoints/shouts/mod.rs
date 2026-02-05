@@ -1,14 +1,19 @@
-use std::{net::IpAddr, str::FromStr};
+use std::{convert::Infallible, net::IpAddr, str::FromStr, sync::Arc};
 
+use async_broadcast::Sender;
 use bytes::Bytes;
 use http_body_util::Full;
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{
+    Method, Request, Response, StatusCode,
+    body::Body,
+    header::{CACHE_CONTROL, CONNECTION, CONTENT_TYPE},
+};
 use jiff::Timestamp;
 use json::object;
 
 use crate::{
     db::CommentDb,
-    models::user::Color,
+    models::{shout::Shout, user::Color},
     server::{
         RequestError,
         util::{extract_key_from_query, json_to_response, options_response, request_to_json},
@@ -180,7 +185,7 @@ pub(crate) async fn get_shouts_endpoint_get(
             let date = json
                 .as_ref()
                 .ok()
-                .and_then(|json| json["shouts_before"].as_str());
+                .and_then(|json| json["shouts_before_date"].as_str());
 
             let shouts = db
                 .get_all_shouts()
@@ -222,12 +227,44 @@ pub(crate) async fn new_shouts_endpoint_get(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
+    shout_events: Sender<Arc<Shout>>,
 ) -> Result<Response<Full<Bytes>>, RequestError> {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::GET => {
-            todo!();
+            let mut rx = shout_events.new_receiver();
+
+            // Create a stream of SSE frames
+            let stream = async_stream::stream! {
+
+                loop {
+                    match rx.recv().await {
+                        Ok(shout) => {
+                            let json = object!{};
+                            yield Ok::<_, Infallible>(format!("data: {json}\n\n"));
+                        },
+                        Err(err)=>{
+                            match err{
+                                async_broadcast::RecvError::Overflowed(_) => todo!(),
+                                async_broadcast::RecvError::Closed => break,
+                            }
+                        }
+
+                    }
+                }
+            };
+
+            let body = todo!();
+
+            Ok(Response::builder()
+                .status(StatusCode::OK)
+                .header(CONTENT_TYPE, "text/event-stream")
+                .header(CACHE_CONTROL, "no-cache")
+                .header(CONNECTION, "keep-alive")
+                // If you’re serving frontend from a different origin, you’ll need CORS headers too.
+                .body(body)
+                .unwrap())
         }
         _ => {
             eprintln!("IP: {addr} Invalid Method on new shouts endpoint");
