@@ -1,15 +1,13 @@
-use std::{convert::Infallible, net::IpAddr, path::PathBuf, sync::Arc};
+use std::{net::IpAddr, path::PathBuf, sync::Arc};
 
-use bytes::Bytes;
 use hotwatch::{EventKind, Hotwatch};
-use http_body_util::{Full, combinators::BoxBody};
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{Method, Request, StatusCode};
 use json::object;
 use rand::seq::IndexedRandom;
 use smol::lock::{OnceCell, RwLock};
 
 use crate::server::{
-    RequestError, RequestResult,
+    RequestResult,
     util::{json_to_response, options_response},
 };
 

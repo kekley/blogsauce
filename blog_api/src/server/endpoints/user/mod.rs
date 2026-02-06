@@ -1,8 +1,6 @@
 use std::{fmt::Write as _, net::IpAddr};
 
-use bytes::Bytes;
-use http_body_util::Full;
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{Method, Request, StatusCode};
 use json::object;
 use rand::{TryRngCore as _, rngs::OsRng};
 
@@ -10,7 +8,7 @@ use crate::{
     db::CommentDb,
     models::ip::TruncatedIp,
     server::{
-        RequestError, RequestResult,
+        RequestResult,
         util::{json_to_response, options_response, request_to_json},
     },
 };
@@ -50,9 +48,9 @@ pub(crate) async fn verify_token_endpoint_get(
 pub(crate) async fn change_color_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
-    db: CommentDb,
+    _db: CommentDb,
 ) -> RequestResult {
-    let mut response_object = object! {};
+    let response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {

@@ -116,9 +116,9 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         listen_port,
         json_posts_url,
         post_list_update_interval_secs,
-        rate_limit_window_secs,
-        rate_limit_cleanup_interval_secs,
-        rate_limit,
+        rate_limit_window_secs: _,
+        rate_limit_cleanup_interval_secs: _,
+        rate_limit: _,
         splashes_path,
     } = Settings::parse();
 
@@ -139,7 +139,7 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         splash_file_watcher(splashes_path);
     }
     println!("Listening on http://{}", addr);
-    let (shout_tx, shout_rx) = broadcast(10);
+    let (shout_tx, _shout_rx) = broadcast(10);
 
     loop {
         let shout_sender = shout_tx.clone();

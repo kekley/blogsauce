@@ -1,15 +1,13 @@
 use std::net::IpAddr;
 
-use bytes::Bytes;
-use http_body_util::Full;
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{Method, Request, StatusCode};
 use json::object;
 
 use crate::{
     db::CommentDb,
     server::{
-        RequestError, RequestResult,
-        util::{extract_key_from_query, json_to_response, options_response, request_to_json},
+        RequestResult,
+        util::{json_to_response, options_response, request_to_json},
     },
 };
 //function names: path+'endpoint'+method

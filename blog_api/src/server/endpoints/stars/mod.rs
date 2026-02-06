@@ -1,14 +1,12 @@
 use std::net::IpAddr;
 
-use bytes::Bytes;
-use http_body_util::Full;
-use hyper::{Method, Request, Response, StatusCode, header::HeaderValue};
+use hyper::{Method, Request, StatusCode};
 use json::object;
 
 use crate::{
     db::CommentDb,
     server::{
-        RequestError, RequestResult,
+        RequestResult,
         util::{json_to_response, options_response, request_to_json},
     },
 };

@@ -1,27 +1,26 @@
-use std::{convert::Infallible, net::IpAddr, str::FromStr, sync::Arc, time::Duration};
+use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
 
 use async_broadcast::Sender;
 use bytes::Bytes;
 use futures::FutureExt as _;
-use http_body_util::{BodyExt, Full, StreamBody, combinators::BoxBody};
+use http_body_util::{BodyExt, StreamBody, combinators::BoxBody};
 use hyper::{
     Method, Request, Response, StatusCode,
-    body::{Body, Frame},
+    body::Frame,
     header::{CACHE_CONTROL, CONNECTION, CONTENT_TYPE, HeaderValue},
 };
-use jiff::Timestamp;
 use json::object;
 use smol::Timer;
 
 use crate::{
     db::CommentDb,
     models::{
-        shout::{Shout, ShoutEvent},
+        shout::ShoutEvent,
         user::Color,
     },
     server::{
         RequestError, RequestResult,
-        util::{extract_key_from_query, json_to_response, options_response, request_to_json},
+        util::{json_to_response, options_response, request_to_json},
     },
 };
 
@@ -198,7 +197,7 @@ pub(crate) async fn get_shouts_endpoint_get(
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
             let json = request_to_json(request).await;
-            let shouts_before_id = json
+            let _shouts_before_id = json
                 .as_ref()
                 .ok()
                 .and_then(|json| json["shouts_before_id"].as_i64());
