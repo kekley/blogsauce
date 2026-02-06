@@ -6,9 +6,114 @@
     <title>fuck it we blog</title>
     <link href="/css/style.css" rel="stylesheet">
     <link href="/fonts/stylesheet.css" rel="stylesheet">
-    <script type="module">
-        import {get_random_window_title} from '/js/title_bar.js';
-        document.title = await get_random_window_title();
+    <script type="module" defer>
+        function do_login(){
+            let login_buttons = document.getElementsByClassName('login-button');
+            for (let i = 0; i < login_buttons.length; ++i) {
+                let item = login_buttons[i];  
+                item.style.display= 'none';
+            }
+            let shoutbox_ui = document.getElementById('shoutbox-ui');
+            shoutbox_ui.style.display='flex';
+            let modal = document.getElementById('login-modal');
+            modal.style.display="none"
+        }
+        function do_logout(){
+            localStorage.removeItem("token");
+            let login_buttons = document.getElementsByClassName('login-button');
+            for (let i = 0; i < login_buttons.length; ++i) {
+                let item = login_buttons[i];  
+                item.style.display= 'block';
+            }
+            let shoutbox_ui = document.getElementById('shoutbox-ui');
+            shoutbox_ui.style.display='none';
+        }
+ 
+        import {get_splash,verify_token} from '/js/api.js';
+        document.title = await get_splash();
+        localStorage.setItem("logged_in",false);
+        const maybe_token = localStorage.getItem("token");
+        if(maybe_token && maybe_token.length == 32){
+            const result = await verify_token(maybe_token);
+            if ("is_valid" in result){
+                let logged_in = result["is_valid"];
+                localStorage.setItem("logged_in",logged_in);
+                if(logged_in==true){
+                    do_login();
+                }else{
+                    do_logout();
+                }
+            }
+        }else{
+            do_logout();
+        }
+
+        import {bind_button_to_close_modal, bind_button_to_open_modal} from '/js/modal.js';
+        let modal = document.getElementById('login-modal');
+        let close_button = document.getElementById('modal-close-button');
+
+        let login_buttons = document.getElementsByClassName('login-button');
+            for (let i = 0; i < login_buttons.length; ++i) {
+                let item = login_buttons[i];  
+                bind_button_to_open_modal(item,modal);
+            }
+
+        bind_button_to_close_modal(close_button,modal);
+
+
+        import {register_display_name} from '/js/api.js';
+
+       let login_submit_button = document.getElementById('login-submit');
+        login_submit_button.onclick = async function(){
+            let display_name_input = document.getElementById('display-name-input');
+            const result = await register_display_name(display_name_input.value);
+            if("error" in result){
+                console.log(JSON.stringify(result));
+            }else if("token" in result){
+                localStorage.setItem("token",result["token"]);
+                localStorage.setItem("logged_in",true);
+                do_login();
+            }
+        };
+ 
+        import {get_shouts,post_shout,subscribe_shouts} from '/js/api.js';
+        import {generate_shout_html} from '/js/snippets.js';
+        let shouts = await get_shouts(null);
+        let messages = document.getElementById("shoutbox-messages");
+        if("shouts" in shouts){
+            let shouts_array = shouts["shouts"];
+            for (let i = 0; i < shouts_array.length; ++i) {
+                let item = shouts_array[i];
+                console.log(item);
+                let html = generate_shout_html(item);
+                messages.innerHTML +=html;
+            }
+        }
+       let shout_send_button = document.getElementById("shoutbox-send");
+        shout_send_button.onclick = async function(){
+            let shoutbox_textarea = document.getElementById("shoutbox-textarea");
+            if(shoutbox_textarea.value.length==0){
+                //TODO show error here
+                return;
+            }
+            const token = localStorage.getItem("token");
+            const response = await post_shout(token,shoutbox_textarea.value);
+            if(!("error" in response)){
+                shoutbox_textarea.value="";
+            }
+            console.log(response);
+        }
+
+        var callback = function(shout){
+            console.log(callback);
+            let messages = document.getElementById("shoutbox-messages");
+            let html = generate_shout_html(shout);
+            messages.innerHTML +=html;
+            
+        };
+        subscribe_shouts(callback);
+        
+
     </script>
 
 </head>
@@ -34,7 +139,7 @@
                 </a>
 
             </div>
-            <button id="login-button">login</button>
+            <button class="login-button"style="">login</button>
             <div class="page-content">
                     {% block content %} {% endblock content %}
             </div>
@@ -45,14 +150,16 @@
             <div class="boxed">
                 <b>shoutbox</b>
                 <div class="shoutbox-container">
-                    <div class="shoutbox-messages"></div>
-                        <div id="shoutbox-login" hidden>
+                    <div class="shoutbox-messages">
+                        <ul id="shoutbox-messages">
+                       </ul>
+                    </div>
+                        <div class="login-button">
                             <button>login</button>
                         </div>
-                    <div class="shoutbox-ui">
-                       <div class="shoutbox-login"></div>
-                        <textarea class="shoutbox-input"></textarea>
-                        <button class="shoutbox-send">send</button>
+                    <div id="shoutbox-ui" class="shoutbox-ui">
+                        <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
+                        <button id="shoutbox-send"class="shoutbox-send">send</button>
                     </div>
                 </div>
             </div>
@@ -62,9 +169,11 @@
     </main>
 
     <div id="login-modal" class="modal">
+        <div style="margin-top:14%;background-color:rgba(0,0,0,0.9); text-align:center">(this is a login screen. enter your username in the DISPLAY NAME box)</div>
         <div class="login-modal-content" style="border-radius:0.3in;line-height:1.2;font-family:'Times New Roman'">
             <button id="modal-close-button" class="modal-close">&times;</button>
             <div style="text-align:center;line-height:1;">
+            
                 <b style="font-size:24px;margin:0;padding:0;">REPUBLICO DE COLOMBIA</b>
                 <div style="font-size:20px;margin:0;padding:0;">IDENTIFICACION DE MASCOTAS</div>
                 <div style="font-size:16px;margin:0;padding:0;">CEDULA DE CIUDADANIA</div>
@@ -73,7 +182,7 @@
             <div style="display:flex;flex-direction:row;justify-content:space-between;">
                 <div>
                     <div style="font-size:20px;margin:0;padding:0;">NOMBRE</div>
-                    <input style="color:black;background: rgba(255, 255, 255, 0.1);"type="text" placeholder="DISPLAY NAME" name="displayname" required>
+                    <input id = "display-name-input" style="color:black;background: rgba(255, 255, 255, 0.1);"type="text" placeholder="DISPLAY NAME" name="displayname" required>
                     <div style="font-size:20px;margin:0;padding:0;"><br>RAZA</div>
                     <b style="font-size:20px;margin:0;padding:0;">CRIOLLO</b>
                     <div style="font-size:20px;margin:0;padding:0;"><br>SEXO</div>
@@ -82,18 +191,10 @@
                 <img src="/images/bunuelo.png" style="margin-top:15%;object-fit:scale-down;width:30%;height:100%;">
             </div>
             <div style="width:100%;display:flex;justify-content:center;">
-                <button type="submit">login</button>
+                <button id="login-submit" type="submit">login</button>
             </div>
         </div>
     </div>
-    <script type="module" defer>
-        import {bind_button_to_close_modal, bind_button_to_open_modal} from '/js/modal.js';
-        var modal = document.getElementById('login-modal');
-        var login_button = document.getElementById('login-button');
-        var close_button = document.getElementById('modal-close-button');
-        bind_button_to_open_modal(login_button,modal);
-        bind_button_to_close_modal(close_button,modal);
-    </script>
 </body>
 
 </html>

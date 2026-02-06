@@ -37,12 +37,13 @@ export async function verify_token(token){
             "error" : `Response status: ${response.status}`
          };
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
     } catch (e) {
        console.log(e);
        return {
+           "error": `${e}`
        };
     }
 }
@@ -65,18 +66,26 @@ export async function getComments(post_list){
          if(!response.ok){
             throw new Error(`Response status: ${response.status}`);
         }
-        const response_json = response.json();
+        const response_json = await response.json();
         console.log(response_json);
         return response_json;
            
         } catch (e) {
            console.log(e);
-           return {};
+          return {
+           "error": `${e}`
+       };
+
     }
 
 }
 
 export async function register_display_name(display_name){
+     if(display_name.length ==0){
+         return {
+             "error" : "username cannot be empty"
+         };
+     }
      const info = {
         "display_name" : display_name,
      };
@@ -94,13 +103,15 @@ export async function register_display_name(display_name){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+           "error": `${e}`
+       }; 
     }   
 }
 
@@ -123,17 +134,50 @@ export async function changeColor(token, color){
          if(!response.ok){
             throw new Error(`Response status: ${response.status}`);
         }
-        const response_json = response.json();
+        const response_json = await response.json();
         console.log(response_json);
         return response_json;
         } catch (e) {
            console.log(e);
-           return {};
+           return {
+           "error": `${e}`
+           };
     }
 
 }
 
-export async function star(post, token){}
+export async function star(post, token){
+    const info = {
+        "token" : token,
+        "post" : post,
+    };
+
+    const location = API_URL + `/star`;
+    const response = await fetch(location, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+            "Content-Type" : "application/json",
+        }
+        ,
+        body: JSON.stringify(info),
+    });
+    try {
+     if(!response.ok){
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const response_json = await response.json();
+    console.log(response_json);
+    return response_json;
+       
+    } catch (e) {
+       console.log(e);
+       return {
+           "error": `${e}`
+       };
+    }
+
+}
 
 export async function edit_comment(comment_id,token,content){
     const info = {
@@ -156,13 +200,15 @@ export async function edit_comment(comment_id,token,content){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+           "error": `${e}`
+       };
     }
 }
 
@@ -186,13 +232,15 @@ export async function delete_comment(comment_id,token){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+        "error" : `${e}`
+       };
     }
 }
 
@@ -216,34 +264,49 @@ export async function post_comment(token,content){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+        "error" : `${e}`
+       };
     }
 }
 
-export async function subscribe_shouts(){
-    const event_source = new EventSource("/subscribeShouts");
-    
-   
-    event_source.onmessage = (ev) => {
-      // default "message" event
-      addMessage(JSON.parse(ev.data));
-    };
-    
-    event_source.onerror = () => {
-      console.log("shouts disconnected, retrying…");
-    }; 
+export function subscribe_shouts(callback) {
+  const es = new EventSource(API_URL + "/subscribeShouts");
+
+  es.onopen = () => {
+    console.log("SSE connected");
+  };
+
+  es.onmessage = (ev) => {
+    callback(JSON.parse(ev.data));
+  };
+
+  es.onerror = () => {
+    console.log(
+      "SSE state:",
+      es.readyState === EventSource.CONNECTING
+        ? "reconnecting"
+        : "closed"
+    );
+  };
 }
-export async function get_shouts(shouts_before_date){
-    const info = {};
+
+
+
+export async function get_shouts(shouts_before_id){
+    let info = {};
+    if(shouts_before_id != undefined || shouts_before_id !=null){
+        info["shouts_before_id"] = shouts_before_id 
+    }
     const location = API_URL + `/getShouts`;
     const response = await fetch(location, {
-        method: "GET",
+        method: "POST",
         mode: "cors",
         headers: {
             "Content-Type" : "application/json",
@@ -255,7 +318,7 @@ export async function get_shouts(shouts_before_date){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
@@ -284,13 +347,15 @@ export async function post_shout(token,content){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+        "error" : `${e}`
+       };
     }
 }
 
@@ -315,18 +380,20 @@ export async function edit_shout(shout_id,token,content){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+        "error" : `${e}`
+       };
     }
 
 }
 
-export async function delete_comment(comment_id,token){
+export async function delete_shout(comment_id,token){
      const info = {
         "shout_id" : shout_id,
         "token" : token,
@@ -346,13 +413,15 @@ export async function delete_comment(comment_id,token){
      if(!response.ok){
         throw new Error(`Response status: ${response.status}`);
     }
-    const response_json = response.json();
+    const response_json = await response.json();
     console.log(response_json);
     return response_json;
        
     } catch (e) {
        console.log(e);
-       return {};
+       return {
+        "error" : `${e}`
+       };
     }
 }
 

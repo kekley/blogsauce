@@ -46,6 +46,12 @@ pub struct Shout {
     posted_on: DateTime,
 }
 
+pub struct ShoutEvent {
+    pub display_name: String,
+    pub content: String,
+    pub user_color: String,
+}
+
 impl Shout {
     pub fn get_content(&self) -> &str {
         &self.content

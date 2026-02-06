@@ -1,19 +1,20 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, convert::Infallible};
 
 use bytes::Bytes;
-use http_body_util::{BodyExt as _, Full};
+use http_body_util::{BodyExt, Full, combinators::BoxBody};
 use hyper::{Request, Response, StatusCode, header::HeaderValue};
 use json::JsonValue;
 
 use crate::server::RequestError;
 
-pub(crate) fn options_response() -> Response<Full<Bytes>> {
+pub(crate) fn options_response() -> Response<BoxBody<Bytes, Infallible>> {
+    let body = Full::new(Bytes::new()).boxed();
     Response::builder()
         .status(StatusCode::OK)
         .header("Allow", "POST, GET, OPTIONS")
         .header("Access-Control-Allow-Headers", "Content-Type")
         .header("Access-Control-Allow-Origin", "*")
-        .body(Full::new(Bytes::new()))
+        .body(body)
         .expect("OPTIONS response should be valid")
 }
 
@@ -24,11 +25,15 @@ pub(crate) fn extract_key_from_query<'a>(query: &'a str, key: &str) -> Option<Co
         .find(|(query_key, _)| query_key.eq(&key))
         .and_then(|(_, value)| urlencoding::decode(value).ok())
 }
-pub(crate) fn json_to_response(json: JsonValue, status_code: StatusCode) -> Response<Full<Bytes>> {
+pub(crate) fn json_to_response(
+    json: JsonValue,
+    status_code: StatusCode,
+) -> Response<BoxBody<Bytes, Infallible>> {
+    let body = Full::new(Bytes::from(json.dump())).boxed();
     Response::builder()
         .header("Access-Control-Allow-Origin", HeaderValue::from_static("*"))
         .status(status_code)
-        .body(Full::new(Bytes::from(json.dump())))
+        .body(body)
         .unwrap_or_default()
 }
 

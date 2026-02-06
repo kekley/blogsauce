@@ -10,7 +10,7 @@ use crate::{
     db::CommentDb,
     models::ip::TruncatedIp,
     server::{
-        RequestError,
+        RequestError, RequestResult,
         util::{json_to_response, options_response, request_to_json},
     },
 };
@@ -19,7 +19,7 @@ pub(crate) async fn verify_token_endpoint_get(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -51,7 +51,7 @@ pub(crate) async fn change_color_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -68,11 +68,11 @@ pub(crate) async fn change_color_endpoint_post(
     }
 }
 
-pub(crate) async fn get_user_endpoint_post(
+pub(crate) async fn register_name_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let truncated_ip = TruncatedIp::new(addr);
     let mut response_object = object! {};
     match *request.method() {
@@ -80,7 +80,9 @@ pub(crate) async fn get_user_endpoint_post(
         Method::POST => {
             let json = request_to_json(request).await?;
 
-            if let Some(user) = json["display_name"].as_str() {
+            if let Some(user) = json["display_name"].as_str()
+                && !user.is_empty()
+            {
                 let mut buf = [0u8; 16];
                 match OsRng.try_fill_bytes(&mut buf) {
                     Ok(_) => {}
@@ -100,8 +102,8 @@ pub(crate) async fn get_user_endpoint_post(
                     Ok(_) => {}
                     Err(err) => {
                         eprintln!("IP: {addr}: error adding user: {err}");
-                        response_object["error"] = "NAME_TAKEN".into();
-                        return Ok(json_to_response(response_object, StatusCode::IM_A_TEAPOT));
+                        response_object["error"] = "Username is already taken".into();
+                        return Ok(json_to_response(response_object, StatusCode::OK));
                     }
                 };
 

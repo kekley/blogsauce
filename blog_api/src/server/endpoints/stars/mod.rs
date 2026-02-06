@@ -8,7 +8,7 @@ use json::object;
 use crate::{
     db::CommentDb,
     server::{
-        RequestError,
+        RequestError, RequestResult,
         util::{json_to_response, options_response, request_to_json},
     },
 };
@@ -17,7 +17,7 @@ pub(crate) async fn post_star_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -50,20 +50,10 @@ pub(crate) async fn post_star_endpoint_post(
                 };
 
                 match db.star_post(post.get_id(), user.get_id()) {
-                    Ok(_) => Ok(Response::builder()
-                        .header("Access-Control-Allow-Origin", HeaderValue::from_static("*"))
-                        .status(StatusCode::OK)
-                        .body(Full::new(Bytes::from_static(b"{}")))
-                        .unwrap()),
+                    Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
                     Err(err) => {
                         eprintln!("IP: {addr}: error starring post: {err}");
-                        Ok(Response::builder()
-                            .header("Access-Control-Allow-Origin", HeaderValue::from_static("*"))
-                            .status(StatusCode::FORBIDDEN)
-                            .body(Full::new(Bytes::from_static(
-                                br#"{"error":"you've already starred this one"}"#,
-                            )))
-                            .unwrap())
+                        Ok(json_to_response(response_object, StatusCode::FORBIDDEN))
                     }
                 }
             } else {

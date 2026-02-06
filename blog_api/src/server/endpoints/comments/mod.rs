@@ -8,7 +8,7 @@ use json::object;
 use crate::{
     db::CommentDb,
     server::{
-        RequestError,
+        RequestError, RequestResult,
         util::{extract_key_from_query, json_to_response, options_response, request_to_json},
     },
 };
@@ -18,7 +18,7 @@ pub(crate) async fn post_comment_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -81,7 +81,7 @@ pub(crate) async fn delete_comment_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -142,7 +142,7 @@ pub(crate) async fn edit_comment_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -207,7 +207,7 @@ pub(crate) async fn get_comments_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-) -> Result<Response<Full<Bytes>>, RequestError> {
+) -> RequestResult {
     let mut response_object = object! {};
 
     match *request.method() {

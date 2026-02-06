@@ -1,30 +1,42 @@
-use std::{net::IpAddr, path::PathBuf, sync::Arc};
+use std::{convert::Infallible, net::IpAddr, path::PathBuf, sync::Arc};
 
 use bytes::Bytes;
 use hotwatch::{EventKind, Hotwatch};
-use http_body_util::Full;
-use hyper::{Request, Response, StatusCode};
+use http_body_util::{Full, combinators::BoxBody};
+use hyper::{Method, Request, Response, StatusCode};
 use json::object;
 use rand::seq::IndexedRandom;
 use smol::lock::{OnceCell, RwLock};
 
-use crate::server::{RequestError, util::json_to_response};
+use crate::server::{
+    RequestError, RequestResult,
+    util::{json_to_response, options_response},
+};
 
 pub static SPLASHES: OnceCell<smol::lock::RwLock<Vec<Arc<str>>>> = OnceCell::new();
 
 pub(crate) async fn get_splash_text_endpoint_get(
-    _request: Request<hyper::body::Incoming>,
-    _addr: IpAddr,
-) -> Result<Response<Full<Bytes>>, RequestError> {
-    let splashes = SPLASHES.wait().await.read().await;
-    let mut rng = rand::rng();
-    let splash: &str = splashes
-        .choose(&mut rng)
-        .map(|arc| &arc[..])
-        .unwrap_or_default();
-    let mut response_object = object! {};
-    response_object["splash"] = splash.into();
-    Ok(json_to_response(response_object, StatusCode::OK))
+    request: Request<hyper::body::Incoming>,
+    addr: IpAddr,
+) -> RequestResult {
+    match *request.method() {
+        Method::OPTIONS => Ok(options_response()),
+        Method::GET => {
+            let splashes = SPLASHES.wait().await.read().await;
+            let mut rng = rand::rng();
+            let splash: &str = splashes
+                .choose(&mut rng)
+                .map(|arc| &arc[..])
+                .unwrap_or_default();
+            let mut response_object = object! {};
+            response_object["splash"] = splash.into();
+            Ok(json_to_response(response_object, StatusCode::OK))
+        }
+        _ => {
+            eprintln!("IP: {addr} Invalid Method on new shouts endpoint");
+            Ok(json_to_response(object! {}, StatusCode::METHOD_NOT_ALLOWED))
+        }
+    }
 }
 
 pub fn splash_file_watcher(file_path: PathBuf) {

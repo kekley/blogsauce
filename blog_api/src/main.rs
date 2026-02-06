@@ -3,6 +3,7 @@ use areq_smol::body::BodyExt as _;
 use areq_smol::http1::Http1;
 use areq_smol::smol::{Connect as _, Handle as _};
 use areq_smol::tls::Tls;
+use async_broadcast::broadcast;
 use async_channel::unbounded;
 use blog_api::db::CommentDb;
 use blog_api::server::endpoints::splashes::splash_file_watcher;
@@ -138,8 +139,10 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         splash_file_watcher(splashes_path);
     }
     println!("Listening on http://{}", addr);
+    let (shout_tx, shout_rx) = broadcast(10);
 
     loop {
+        let shout_sender = shout_tx.clone();
         let (tcp, socket_addr) = listener.accept().await?;
         let ip_addr = socket_addr.ip();
         let pool = db_connection_pool.clone();
@@ -150,10 +153,11 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         spawn(async move {
             if let Err(err) = Builder::new()
                 .timer(SmolTimer::new())
-                .keep_alive(false)
+                .keep_alive(true)
                 .serve_connection(
                     io,
                     service_fn(move |request: Request<Incoming>| {
+                        let s = shout_sender.clone();
                         let db = CommentDb::from_pooled_conn(pool.get().unwrap());
                         let origin = request
                             .headers()
@@ -169,7 +173,7 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
                         println!("IP: {ip_addr}, Endpoint: {}", request.uri().path());
 
-                        handle_request(request, ip_addr, db)
+                        handle_request(request, ip_addr, db, s)
                     }),
                 )
                 .await
