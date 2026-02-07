@@ -55,7 +55,8 @@ pub(crate) async fn post_star_endpoint_post(
                     }
                 }
             } else {
-                todo!();
+                response_object["error"] = "Invalid token".into();
+                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
             }
         }
         _ => {

@@ -28,7 +28,7 @@ pub(crate) async fn verify_token_endpoint_get(
                 return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
             };
             if let Some(token) = json["token"].as_str()
-                && let Ok(_) = dbg!(db.get_user_from_token(dbg!(token)))
+                && let Ok(_) = db.get_user_from_token(token)
             {
                 response_object["is_valid"] = true.into();
                 Ok(json_to_response(response_object, StatusCode::OK))
@@ -51,11 +51,15 @@ pub(crate) async fn change_color_endpoint_post(
     addr: IpAddr,
     _db: CommentDb,
 ) -> RequestResult {
-    let response_object = object! {};
+    let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            todo!()
+            response_object["error"] = "not done with this yet oops".into();
+            Ok(json_to_response(
+                response_object,
+                StatusCode::NOT_IMPLEMENTED,
+            ))
         }
         _ => {
             eprintln!("IP: {addr} Invalid Method on verify user endpoint");
@@ -114,7 +118,8 @@ pub(crate) async fn register_name_endpoint_post(
                 response_object["token"] = token.into();
                 Ok(json_to_response(response_object, StatusCode::OK))
             } else {
-                todo!();
+                response_object["error"] = "No display_name field".into();
+                Ok(json_to_response(response_object, StatusCode::OK))
             }
         }
         _ => {

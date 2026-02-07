@@ -38,12 +38,11 @@ pub struct Settings {
     database_path: PathBuf,
     #[arg(
         help = "The path where the tab title splashes will be read from",
-        short = 'd',
+        short = 's',
         long,
         default_value = "../splashes/splashes.txt"
     )]
     splashes_path: PathBuf,
-
     #[arg(
         help = "The port the server will listen on",
         short = 'p',

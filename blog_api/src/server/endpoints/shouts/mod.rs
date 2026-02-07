@@ -55,19 +55,17 @@ pub(crate) async fn post_shout_endpoint_post(
                     }
                 };
                 if r.is_ok() {
-                    let _ = dbg!(
-                        shout_events
-                            .broadcast(Arc::new(ShoutEvent {
-                                display_name: user.get_display_name().to_string(),
-                                content: ammonia::clean(content),
-                                user_color: user.get_color().to_string(),
-                            }))
-                            .await
-                    );
+                    shout_events
+                        .broadcast(Arc::new(ShoutEvent {
+                            display_name: user.get_display_name().to_string(),
+                            content: ammonia::clean(content),
+                            user_color: user.get_color().to_string(),
+                        }))
+                        .await
+                        .unwrap();
                 }
                 r
             } else {
-                dbg!("err");
                 response_object["error"] = "Invalid user token".into();
                 Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
             }
@@ -270,7 +268,7 @@ pub(crate) async fn subscribe_shouts_endpoint(
                                     continue;
                                 }
                                 Err(async_broadcast::RecvError::Closed) => {
-                                    dbg!("lol");
+                                    dbg!("im tired chief");
                                     break;
                                 }
                             }

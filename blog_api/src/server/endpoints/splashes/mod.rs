@@ -52,7 +52,6 @@ pub fn splash_file_watcher(mut file_path: PathBuf) -> Hotwatch {
     file_watcher
         .watch(&file_path, |event| match event.kind {
             EventKind::Create(_) | EventKind::Modify(_) => {
-                dbg!("event");
                 if let Ok(file_contents) = std::fs::read_to_string(&event.paths[0]) {
                     let lock = SPLASHES.wait_blocking();
                     let mut guard = lock.write_blocking();

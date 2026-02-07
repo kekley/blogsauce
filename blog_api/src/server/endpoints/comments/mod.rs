@@ -188,7 +188,8 @@ pub(crate) async fn edit_comment_endpoint_post(
                     }
                 }
             } else {
-                todo!();
+                response_object["error"] = "Invalid token".into();
+                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
             }
         }
         _ => {
@@ -226,7 +227,7 @@ pub(crate) async fn get_comments_endpoint_post(
                 let mut posts_response = Vec::with_capacity(posts.len());
                 let post_idents_iter = posts.iter().flat_map(|json_value| json_value.as_str());
                 for post_ident in post_idents_iter {
-                    let post = match db.get_post_with_ident(&post_ident) {
+                    let post = match db.get_post_with_ident(post_ident) {
                         Ok(post) => post,
                         Err(_err) => {
                             response_object["error"] = "could not fetch comments".into();
@@ -246,9 +247,13 @@ pub(crate) async fn get_comments_endpoint_post(
                     let mut post_json = object! {comments:[],stars:0};
 
                     for comment in comments {
+                        let Ok(user) = db.get_user_by_id(comment.get_user_id()) else {
+                            continue;
+                        };
                         let mut comment_json = object! {};
                         comment_json["id"] = comment.get_id().into();
-                        comment_json["username"] = todo!();
+                        comment_json["name_color"] = user.get_color().to_string().into();
+                        comment_json["display_name"] = user.get_display_name().into();
                         comment_json["content"] = comment.get_content().into();
                         comment_json["editable"] = (comment.get_user_id() == user.get_id()).into();
                         comment_json["created"] = comment.get_datetime().to_string().into();
@@ -268,7 +273,8 @@ pub(crate) async fn get_comments_endpoint_post(
                 }
                 Ok(json_to_response(response_object, StatusCode::OK))
             } else {
-                todo!();
+                response_object["error"] = "Invalid token".into();
+                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
             }
         }
         _ => {
