@@ -137,21 +137,23 @@ html {
     background-color: hsla(var(--nav-color-h), var(--nav-color-s), var(--nav-color-l), 0.8);
     color: var(--light-text-color);
 
-    a:hover {
-        background-color: rgba(100, 100, 100, 0.1);
-    }
-
-    a {
-        box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
-        font-size: .3in;
-        width: 20%;
-        color: inherit;
-        text-align: center;
-        border: 2px solid var(--nav-color-darker-border);
-        background-color: rgba(0, 0, 0, 0.1);
-    }
-
 }
+
+.top-bar a:hover {
+    background-color: rgba(100, 100, 100, 0.1);
+}
+
+.top-bar a {
+    box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
+    font-size: .3in;
+    width: 20%;
+    color: inherit;
+    text-align: center;
+    border: 2px solid var(--nav-color-darker-border);
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+
 
 .bottom-bar {
     display: flex;
@@ -162,14 +164,16 @@ html {
     color: var(--light-text-color);
 
 
-    a {
-        font-size: .3in;
-        color: inherit;
-        text-align: center;
-    }
 
 
 
+
+}
+
+.bottom-bar a {
+    font-size: .3in;
+    color: inherit;
+    text-align: center;
 }
 
 .page-content {
@@ -178,46 +182,30 @@ html {
     flex-direction: inherit;
     justify-items: center;
 
-    p h1 h2 {
-        margin-left: 4%;
-        margin-right: 4%;
-    }
-
-    a {
-        color: inherit;
-    }
-
-
-    img {
-        margin-top: 2%;
-        justify-self: center;
-        display: flex;
-        flex-shrink: 0;
-        align-self: center;
-        max-width: 100%;
-    }
-
-    .captioned-image {
-        align-self: center;
-        display: inline-block;
-        padding-bottom: 2%;
-
-        figcaption {
-            padding: 1%;
-            max-width: min-content;
-            min-width: 100%;
-            margin-inline: auto;
-
-            font-size: .25in;
-            background-color: var(--accent-color);
-        }
-
-
-    }
-
 
 
 }
+
+.page-content p h1 h2 {
+    margin-left: 4%;
+    margin-right: 4%;
+}
+
+.page-content a {
+    color: inherit;
+}
+
+.page-content img {
+    margin-top: 2%;
+    justify-self: center;
+    display: flex;
+    flex-shrink: 0;
+    align-self: center;
+    max-width: 100%;
+}
+
+
+
 
 main {
     display: flex;
@@ -227,88 +215,124 @@ main {
     justify-content: center;
     align-items: flex-start;
 
+}
+
+main .shoutbox-container {
+    height: 30vw;
+}
 
 
-    .side-col {
-        text-align: center;
-        width: 15%;
-        margin-top: var(--topnav-height);
-    }
 
-    .boxed {
-        margin: 0.5rem;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.5rem;
-        border: 5px solid var(--nav-color-darker-border);
-        box-shadow: rgba(0, 0, 0, 0.2) 5px 2px 5px;
-    }
+main .shoutbox-username {
+    color: whitesmoke;
+}
 
 
-    .reading-container {
-        height: 30vw;
-    }
 
-    .page-html {
-        display: flex;
+main .shoutbox-messages {
+    height: 90%;
+    border: 2px solid #888;
+    overflow-y: scroll;
+
+
+}
+
+.shoutbox-messages ul {
+    margin: 0;
+    padding: 0 2% 2% 0;
+}
+
+main .shoutbox-message {
+    display: flex;
+    border-bottom: 2px dotted #888;
+    text-align: left;
+    line-height: 1.3;
+
+
+}
+
+.shoutbox-message p {
+    margin: 0;
+}
+
+main .page-html {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+    flex-shrink: 1;
+    align-items: center;
+    flex-basis: var(--page-width);
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    min-height: calc(100vh - 150px);
+}
+
+main .shoutbox-ui {
+    display: none;
+    height: 10%;
+    flex-direction: row;
+}
+
+
+main .shoutbox-input {
+    width: 80%;
+    background: rgba(255, 255, 255, 0.1);
+    color: whitesmoke;
+    border: 2px solid #888;
+}
+
+main .shoutbox-send {
+    width: 20%;
+    height: 100%;
+}
+
+main .boxed {
+    margin: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem;
+    border: 5px solid var(--nav-color-darker-border);
+    box-shadow: rgba(0, 0, 0, 0.2) 5px 2px 5px;
+}
+
+main .side-col {
+    text-align: center;
+    width: 15%;
+    margin-top: var(--topnav-height);
+}
+
+
+
+@media (max-width: 1600px) {
+    main {
         flex-direction: column;
-        flex-grow: 0;
-        flex-shrink: 1;
         align-items: center;
-        flex-basis: var(--page-width);
-        background: rgba(0, 0, 0, 0.4);
-        overflow: hidden;
-        padding: 0;
-        margin: 0;
-        min-height: calc(100vh - 150px);
+        padding-bottom: 3%;
     }
 
-    .shoutbox-container {
-        height: 30vw;
+    main>.side-col:last-child {
+        order: 1;
     }
 
-    .shoutbox-username {
-        color: whitesmoke;
-    }
-
-    .shoutbox-messages {
-        height: 90%;
-        border: 2px solid #888;
-        overflow-y: scroll;
-
-        ul {
-            margin: 0;
-            padding: 0 2% 2% 0;
-        }
-    }
-
-    .shoutbox-message {
-        display: flex;
-        border-bottom: 2px dotted #888;
-        text-align: left;
-        line-height: 1.3;
-
-        p {
-            margin: 0;
-        }
-    }
-
-
-    .shoutbox-ui {
-        display: none;
-        height: 10%;
-        flex-direction: row;
-    }
-
-    .shoutbox-input {
+    main .side-col {
         width: 80%;
-        background: rgba(255, 255, 255, 0.1);
-        color: whitesmoke;
-        border: 2px solid #888;
+        margin-top: 0;
     }
 
-    .shoutbox-send {
-        width: 20%;
-        height: 100%;
+    main .page-html {
+        flex-basis: auto;
+        width: 100%;
+        min-height: auto;
     }
 
+    main .shoutbox-container {
+        width: 100%;
+        height: 60vh;
+    }
+
+    main .boxed {
+        width: 100%;
+        box-sizing: border-box;
+    }
 }

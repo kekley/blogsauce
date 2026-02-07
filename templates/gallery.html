@@ -48,7 +48,7 @@
 </style>
 
 <section class="gallery-page">
-    <div style="align-text:center;">
+    <div style="text-align:center;">
         <h2>{{ section.title }}</h2>
     </div>
     {{ section.content | safe }}
@@ -71,7 +71,7 @@
     <img id="lightbox-img" src="" alt="">
 </div>
 
-<script defer>
+<script>
     const lightbox = document.getElementById("lightbox");
     const lightbox_image = document.getElementById("lightbox-img");
 
@@ -83,17 +83,18 @@
     });
 
 
-    window.onclick = function (event) {
+    window.addEventListener("click", function (event) {
         if (event.target == lightbox) {
             lightbox.style.display = "none";
             lightbox_image.src = "";
 
         }
-    }
+
+    });
 
 
     document.addEventListener("keydown", event => {
-        if (eevent.key === "Escape" && !lightbox.hidden) {
+        if (event.key === "Escape" && !lightbox.hidden) {
             lightbox.style.display = "none";
             lightbox_image.src = "";
         }
