@@ -37,7 +37,7 @@ pub(crate) async fn get_splash_text_endpoint_get(
     }
 }
 
-pub fn splash_file_watcher(file_path: PathBuf) {
+pub fn splash_file_watcher(mut file_path: PathBuf) -> Hotwatch {
     let mut file_watcher =
         Hotwatch::new().unwrap_or_else(|_| panic!("Could not watch {file_path:?}"));
     let splashes = std::fs::read_to_string(&file_path)
@@ -47,9 +47,12 @@ pub fn splash_file_watcher(file_path: PathBuf) {
     SPLASHES
         .set_blocking(RwLock::new(splashes))
         .expect("Could not initialize splash text");
+    //Watch the folder instead of the file to get around some weird behavior
+    file_path.pop();
     file_watcher
         .watch(&file_path, |event| match event.kind {
             EventKind::Create(_) | EventKind::Modify(_) => {
+                dbg!("event");
                 if let Ok(file_contents) = std::fs::read_to_string(&event.paths[0]) {
                     let lock = SPLASHES.wait_blocking();
                     let mut guard = lock.write_blocking();
@@ -57,8 +60,8 @@ pub fn splash_file_watcher(file_path: PathBuf) {
                     guard.extend(file_contents.lines().map(Arc::from));
                 }
             }
-            EventKind::Remove(_) => {}
             _ => {}
         })
-        .unwrap_or_else(|_| panic!("Could not watch {file_path:?}"))
+        .unwrap_or_else(|_| panic!("Could not watch {file_path:?}"));
+    file_watcher
 }

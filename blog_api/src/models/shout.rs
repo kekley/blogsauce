@@ -45,7 +45,7 @@ pub struct Shout {
     edited: bool,
     posted_on: DateTime,
 }
-
+#[derive(Debug)]
 pub struct ShoutEvent {
     pub display_name: String,
     pub content: String,

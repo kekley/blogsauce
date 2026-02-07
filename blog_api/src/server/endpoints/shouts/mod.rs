@@ -14,10 +14,7 @@ use smol::Timer;
 
 use crate::{
     db::CommentDb,
-    models::{
-        shout::ShoutEvent,
-        user::Color,
-    },
+    models::{shout::ShoutEvent, user::Color},
     server::{
         RequestError, RequestResult,
         util::{json_to_response, options_response, request_to_json},
@@ -58,16 +55,19 @@ pub(crate) async fn post_shout_endpoint_post(
                     }
                 };
                 if r.is_ok() {
-                    let _ = shout_events
-                        .broadcast(Arc::new(ShoutEvent {
-                            display_name: user.get_display_name().to_string(),
-                            content: ammonia::clean(content),
-                            user_color: user.get_color().to_string(),
-                        }))
-                        .await;
+                    let _ = dbg!(
+                        shout_events
+                            .broadcast(Arc::new(ShoutEvent {
+                                display_name: user.get_display_name().to_string(),
+                                content: ammonia::clean(content),
+                                user_color: user.get_color().to_string(),
+                            }))
+                            .await
+                    );
                 }
                 r
             } else {
+                dbg!("err");
                 response_object["error"] = "Invalid user token".into();
                 Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
             }
@@ -266,6 +266,7 @@ pub(crate) async fn subscribe_shouts_endpoint(
                                     );
                                 }
                                 Err(async_broadcast::RecvError::Overflowed(_)) => {
+                                    dbg!("ovaflow");
                                     continue;
                                 }
                                 Err(async_broadcast::RecvError::Closed) => {
@@ -275,7 +276,7 @@ pub(crate) async fn subscribe_shouts_endpoint(
                             }
                         }
 
-                        _ = Timer::after(Duration::from_secs(1)).fuse() => {
+                        _ = Timer::after(Duration::from_secs(15)).fuse() => {
                             // SSE heartbeat comment
                             yield Ok::<Frame<Bytes>, Infallible>(
                                 Frame::data(Bytes::from(": keep-alive\n\n"))

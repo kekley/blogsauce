@@ -3,7 +3,7 @@
 1. ~~add borders to stuff~~
 2. server stats (cpu temperature, connections, bandwidth)
 3. run server on pi
-4. login modal
+4. ~~login modal~~
 
 
 # blogs i like

@@ -47,6 +47,9 @@
 }
 
 .login-modal-content {
+    line-height: 1.2;
+    font-family: 'Times New Roman';
+    border-radius: 0.3in;
     background-repeat: repeat;
     background-image: url("/images/id.png");
     margin: 5% auto;
@@ -55,6 +58,44 @@
     padding: 0.15in;
     border: 2px solid #888;
     width: 4.8in;
+}
+
+.token-login-modal-content {
+    border-radius: 0.3in;
+    justify-content: center;
+    background-repeat: repeat;
+    background-image: url("/images/ourple.png");
+    margin: 15% auto;
+    padding: 0.15in;
+    background-size: 15px;
+    border: 2px solid #888;
+    width: 4.8in;
+}
+
+.confirmation-modal-content {
+    border-radius: 0.3in;
+    background-repeat: repeat;
+    background-image: url("/images/ourple.png");
+    margin: 15% auto;
+    padding: 0.15in;
+    background-size: 15px;
+    border: 2px solid #888;
+    width: 4.8in;
+}
+
+.login-messages {
+    background-size: 15px;
+    border-radius: 0.3in;
+    margin: auto;
+    margin-top: 10%;
+    background-color: rgba(0, 0, 0, 0.9);
+    text-align: center;
+    background-repeat: repeat;
+    background-image: url("/images/ourple.png");
+    padding: 0.15in;
+    border: 2px solid #888;
+    width: 4.8in;
+
 }
 
 .modal-close:hover,
@@ -232,7 +273,7 @@ main {
     .shoutbox-messages {
         height: 90%;
         border: 2px solid #888;
-        overflow-y: auto;
+        overflow-y: scroll;
 
         ul {
             margin: 0;

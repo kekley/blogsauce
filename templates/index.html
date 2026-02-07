@@ -1,7 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="title">
-    Bloog
-</h1>
-<p><a href="{{ get_url(path='@/posts/_index.md') }}">Posts</a>.</p>
+    {% for page in paginator.pages %}
+    <div class = "post-content">
+        <a style="text-decoration:none;" href="{{page.permalink}}">
+            <h1>{{ page.title}}</h1>
+        </a>
+        <div style = "border-bottom:1px solid rgba(255,255,255,0.1);">
+            {{ page.content | safe }}
+        </div>
+    </div>
+    {% endfor %}
+            <div class="bottom-bar">
+                {% if paginator.previous %}
+                    <a class="previous" href="{{ paginator.previous }}">‹ Previous</a>
+                {% endif %}
+                {% if paginator.next %}
+                    <a class="next" href="{{ paginator.next }}">Next ›</a>
+                {% endif %}
+            </div>
+            <div class="bottom-bar">
+                <a href='/archive'>
+                   Archive
+                </a>
+            </div>
+
+
 {% endblock content %}

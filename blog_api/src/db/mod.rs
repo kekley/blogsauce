@@ -58,7 +58,7 @@ impl CommentDb {
         Self { conn }
     }
     pub fn edit_comment(&self, id: CommentId, comment: &str) -> Result<(), rusqlite::Error> {
-        let content = ammonia::clean(comment);
+        let content = ammonia::clean(comment.trim());
         let mut statement = self.conn.prepare(UPDATE_COMMENT)?;
 
         statement.execute((content, id))?;
@@ -132,7 +132,7 @@ impl CommentDb {
         let content = ammonia::clean(comment);
         let mut statement = self.conn.prepare(INSERT_COMMENT)?;
 
-        statement.execute((post_id, user_id, content))?;
+        statement.execute((post_id, user_id, content.trim()))?;
         Ok(())
     }
 
@@ -161,13 +161,13 @@ impl CommentDb {
         let mut statement = self.conn.prepare(INSERT_USER)?;
         let mut rng = rand::rng();
         let color: u32 = rng.random();
-        statement.execute((display_name, token, color, ip))?;
+        statement.execute((display_name.trim(), token.trim(), color, ip))?;
         Ok(())
     }
 
     pub fn get_user_from_token(&self, token: &str) -> Result<User, rusqlite::Error> {
         let mut statement = self.conn.prepare(GET_USER_BY_TOKEN)?;
-        statement.query_one((token,), User::from_row)
+        statement.query_one((token.trim(),), User::from_row)
     }
 
     pub fn get_shout_from_id(&self, shout_id: i64) -> Result<Shout, rusqlite::Error> {
@@ -193,13 +193,13 @@ impl CommentDb {
     }
 
     pub fn add_shout(&self, user_id: UserId, content: &str) -> Result<(), rusqlite::Error> {
-        let content = ammonia::clean(content);
+        let content = ammonia::clean(content.trim());
         let mut statement = self.conn.prepare(INSERT_SHOUT)?;
         statement.execute((user_id, content))?;
         Ok(())
     }
     pub fn edit_shout(&self, shout_id: ShoutId, content: &str) -> Result<(), rusqlite::Error> {
-        let content = ammonia::clean(content);
+        let content = ammonia::clean(content.trim());
         let mut statement = self.conn.prepare(UPDATE_SHOUT)?;
         statement.execute((content, shout_id))?;
 

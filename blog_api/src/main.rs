@@ -40,7 +40,7 @@ pub struct Settings {
         help = "The path where the tab title splashes will be read from",
         short = 'd',
         long,
-        default_value = "../splashes.txt"
+        default_value = "../splashes/splashes.txt"
     )]
     splashes_path: PathBuf,
 
@@ -135,11 +135,14 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         ))
         .detach();
     }
-    if !splashes_path.to_string_lossy().is_empty() {
-        splash_file_watcher(splashes_path);
-    }
+    let _watcher = if !splashes_path.to_string_lossy().is_empty() {
+        Some(splash_file_watcher(splashes_path))
+    } else {
+        None
+    };
     println!("Listening on http://{}", addr);
-    let (shout_tx, _shout_rx) = broadcast(10);
+    let (mut shout_tx, _shout_rx) = broadcast(10);
+    shout_tx.set_overflow(true);
 
     loop {
         let shout_sender = shout_tx.clone();

@@ -348,7 +348,7 @@ export async function post_shout(token,content){
         throw new Error(`Response status: ${response.status}`);
     }
     const response_json = await response.json();
-    console.log(response_json);
+    console.log(JSON.stringify(response_json));
     return response_json;
        
     } catch (e) {

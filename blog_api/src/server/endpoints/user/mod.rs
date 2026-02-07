@@ -3,6 +3,7 @@ use std::{fmt::Write as _, net::IpAddr};
 use hyper::{Method, Request, StatusCode};
 use json::object;
 use rand::{TryRngCore as _, rngs::OsRng};
+use rusqlite::ErrorCode;
 
 use crate::{
     db::CommentDb,
@@ -99,8 +100,13 @@ pub(crate) async fn register_name_endpoint_post(
                 match db.add_user(user, &token, truncated_ip) {
                     Ok(_) => {}
                     Err(err) => {
+                        if err.sqlite_error_code() == Some(ErrorCode::ConstraintViolation) {
+                            eprintln!("IP: {addr}: error adding user: {err}");
+                            response_object["error"] = "NAME_TAKEN".into();
+                            return Ok(json_to_response(response_object, StatusCode::OK));
+                        }
                         eprintln!("IP: {addr}: error adding user: {err}");
-                        response_object["error"] = "Username is already taken".into();
+                        response_object["error"] = "Internal Error".into();
                         return Ok(json_to_response(response_object, StatusCode::OK));
                     }
                 };
