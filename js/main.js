@@ -132,8 +132,8 @@
         import {generate_shout_html} from './snippets.js';
 
         window.addEventListener("load", async (event) => {
-
-            let shouts = await get_shouts(null);
+            const token = localStorage.getItem("token");
+            let shouts = await get_shouts(null,token);
             let messages = document.getElementById("shoutbox-messages");
             if ("shouts" in shouts) {
                 let shouts_array = shouts["shouts"];
@@ -181,6 +181,24 @@
         };
 
         subscribe_shouts(callback);
+
+        let popup = document.getElementById('color-change-popup');
+        document.addEventListener("click", function(event) {
+            if (!event.target.classList.contains("shoutbox-username-editable") && !popup.contains(event.target)) {
+                popup.style.display = "none";
+            }
+        });
+ 
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("shoutbox-username-editable")) {
+                popup.style.display="block";
+                popup.style.left = event.pageX + "px";
+                popup.style.top = event.pageY + "px";
+            }
+        });
+
+
+
 
 
 

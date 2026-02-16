@@ -9,7 +9,7 @@ use crate::server::endpoints::comments::get_comments_endpoint_post;
 use crate::server::endpoints::comments::post_comment_endpoint_post;
 use crate::server::endpoints::shouts::delete_shout_endpoint_post;
 use crate::server::endpoints::shouts::edit_shout_endpoint_post;
-use crate::server::endpoints::shouts::get_shouts_endpoint_get;
+use crate::server::endpoints::shouts::get_shouts_endpoint_post;
 use crate::server::endpoints::shouts::post_shout_endpoint_post;
 use crate::server::endpoints::shouts::subscribe_shouts_endpoint;
 use crate::server::endpoints::splashes::get_splash_text_endpoint_get;
@@ -80,7 +80,7 @@ pub async fn handle_request(
         "/deleteComment" => delete_comment_endpoint_post(request, addr, db).await,
         "/postComment" => post_comment_endpoint_post(request, addr, db).await,
         "/subscribeShouts" => subscribe_shouts_endpoint(request, addr, db, shout_events).await,
-        "/getShouts" => get_shouts_endpoint_get(request, addr, db).await,
+        "/getShouts" => get_shouts_endpoint_post(request, addr, db).await,
         "/postShout" => post_shout_endpoint_post(request, addr, db, shout_events).await,
         "/editShout" => edit_shout_endpoint_post(request, addr, db).await,
         "/deleteShout" => delete_shout_endpoint_post(request, addr, db).await,

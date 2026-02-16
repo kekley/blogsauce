@@ -276,8 +276,12 @@ export async function post_comment(token,content){
     }
 }
 
-export function subscribe_shouts(callback) {
-  const es = new EventSource(API_URL + "/subscribeShouts");
+export function subscribe_shouts(callback,token) {
+    let token_param = "";
+    if(token!=undefined && token!=null){
+        token_param=`?token=${token}`
+    }
+  const es = new EventSource(API_URL + `/subscribeShouts${token_param}`);
 
   es.onopen = () => {
     console.log("SSE connected");
@@ -299,11 +303,18 @@ export function subscribe_shouts(callback) {
 
 
 
-export async function get_shouts(shouts_before_id){
-    let info = {};
-    if(shouts_before_id != undefined || shouts_before_id !=null){
-        info["shouts_before_id"] = shouts_before_id 
+export async function get_shouts(shouts_before_id,token){
+    let info = {
+    };
+    if(shouts_before_id != undefined && shouts_before_id !=null){
+        info["shouts_before_id"] = shouts_before_id;
     }
+    console.log(token);
+    if(token != undefined && token!=null){
+        console.log(token);
+        info["token"] =token;
+    }
+ 
     const location = API_URL + `/getShouts`;
     const response = await fetch(location, {
         method: "POST",

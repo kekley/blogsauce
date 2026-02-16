@@ -17,7 +17,7 @@ use crate::{
     models::{shout::ShoutEvent, user::Color},
     server::{
         RequestError, RequestResult,
-        util::{json_to_response, options_response, request_to_json},
+        util::{extract_key_from_query, json_to_response, options_response, request_to_json},
     },
 };
 
@@ -60,6 +60,7 @@ pub(crate) async fn post_shout_endpoint_post(
                             display_name: user.get_display_name().to_string(),
                             content: ammonia::clean(content),
                             user_color: user.get_color().to_string(),
+                            user_id: user.get_id(),
                         }))
                         .await
                         .unwrap();
@@ -185,7 +186,7 @@ pub(crate) async fn delete_shout_endpoint_post(
 
 ///Returns the 10 most recent comments. `shouts_before` can be specified to get the 10 most recent
 ///comments before the specified date
-pub(crate) async fn get_shouts_endpoint_get(
+pub(crate) async fn get_shouts_endpoint_post(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
@@ -194,11 +195,14 @@ pub(crate) async fn get_shouts_endpoint_get(
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let json = request_to_json(request).await;
+            let json = request_to_json(request).await.ok();
             let _shouts_before_id = json
                 .as_ref()
-                .ok()
                 .and_then(|json| json["shouts_before_id"].as_i64());
+            let user_opt = json.as_ref().and_then(|json| {
+                let token = json["token"].as_str()?;
+                db.get_user_from_token(token).ok()
+            });
 
             let shouts = db
                 .get_all_shouts()
@@ -219,6 +223,10 @@ pub(crate) async fn get_shouts_endpoint_get(
                 shout_json["content"] = shout.get_content().into();
                 shout_json["edited"] = shout.was_edited().into();
                 shout_json["date"] = shout.get_datetime().to_string().into();
+                shout_json["editable"] = user_opt
+                    .as_ref()
+                    .is_some_and(|user| user.get_id() == shout.get_user_id())
+                    .into();
                 shouts_vec.push(shout_json);
             }
 
@@ -239,12 +247,20 @@ pub(crate) async fn get_shouts_endpoint_get(
 pub(crate) async fn subscribe_shouts_endpoint(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
-    _db: CommentDb,
+    db: CommentDb,
     shout_events: Sender<Arc<ShoutEvent>>,
 ) -> Result<Response<BoxBody<Bytes, Infallible>>, RequestError> {
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::GET => {
+            let token = request
+                .uri()
+                .query()
+                .and_then(|query| extract_key_from_query(query, "token"));
+            let user_opt = token
+                .as_ref()
+                .and_then(|token| db.get_user_from_token(token).ok());
+
             let mut rx = shout_events.new_receiver();
 
             let stream = async_stream::stream! {
@@ -252,11 +268,12 @@ pub(crate) async fn subscribe_shouts_endpoint(
                     futures::select! {
                         msg = rx.recv().fuse() => {
                             match msg {
-                                Ok(shout) => {
+                                Ok(shout_event) => {
                                     let json = object!{
-                                        user_color: shout.user_color.as_str(),
-                                        display_name: shout.display_name.as_str(),
-                                        content: shout.content.as_str(),
+                                        user_color: shout_event.user_color.as_str(),
+                                        display_name: shout_event.display_name.as_str(),
+                                        content: shout_event.content.as_str(),
+                                        editable: user_opt.as_ref().is_some_and(|user|user.get_id()==shout_event.user_id)
                                     };
 
                                     yield Ok::<Frame<Bytes>, Infallible>(
@@ -264,11 +281,9 @@ pub(crate) async fn subscribe_shouts_endpoint(
                                     );
                                 }
                                 Err(async_broadcast::RecvError::Overflowed(_)) => {
-                                    dbg!("ovaflow");
                                     continue;
                                 }
                                 Err(async_broadcast::RecvError::Closed) => {
-                                    dbg!("im tired chief");
                                     break;
                                 }
                             }

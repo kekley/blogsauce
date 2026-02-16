@@ -74,7 +74,10 @@ impl std::fmt::Debug for Color {
 impl std::fmt::Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let bytes = self.0.to_ne_bytes();
-        f.write_fmt(format_args!("#{:x}{:x}{:x}", bytes[0], bytes[1], bytes[2]))
+        f.write_fmt(format_args!(
+            "#{:02x}{:02x}{:02x}",
+            bytes[0], bytes[1], bytes[2]
+        ))
     }
 }
 

@@ -50,6 +50,7 @@ pub struct ShoutEvent {
     pub display_name: String,
     pub content: String,
     pub user_color: String,
+    pub user_id: UserId,
 }
 
 impl Shout {
