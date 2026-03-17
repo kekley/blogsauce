@@ -1,355 +1,364 @@
 :root {
-    --page-html-bg-transparent: rgba(color(#2a2828 lightness(-12.2%)), 0.7);
-    --page-padding-inline: 2.1rem;
-    --page-padding-block: 1.4rem;
-    --page-width: 1080px;
-    --topnav-height: 4.5em;
-    --bottomnav-height: 10.0em;
-    --accent-color: #5B7553;
-    --nav-color-h: 61;
-    --nav-color-s: 42%;
-    --nav-color-l: 44%;
-    --nav-color: hsl(var(--nav-color-h), var(--nav-color-s), var(--nav-color-l));
-    --nav-color-darker-border: hsl(var(--nav-color-h), var(--nav-color-s), calc(var(--nav-color-l) - 20%));
-    --nav-color-darker-fill: hsl(var(--nav-color-h), var(--nav-color-s), calc(var(--nav-color-l) - 10%));
-    --light-text-color: whitesmoke;
+  --page-html-bg-transparent: rgba(color(#2a2828 lightness(-12.2%)), 0.7);
+  --page-padding-inline: 2.1rem;
+  --page-padding-block: 1.4rem;
+  --page-width: 1080px;
+  --topnav-height: 4.5em;
+  --bottomnav-height: 10em;
+  --accent-color: #5b7553;
+  --nav-color-h: 61;
+  --nav-color-s: 42%;
+  --nav-color-l: 44%;
+  --nav-color: hsl(var(--nav-color-h), var(--nav-color-s), var(--nav-color-l));
+  --nav-color-darker-border: hsl(
+    var(--nav-color-h),
+    var(--nav-color-s),
+    calc(var(--nav-color-l) - 20%)
+  );
+  --nav-color-darker-fill: hsl(
+    var(--nav-color-h),
+    var(--nav-color-s),
+    calc(var(--nav-color-l) - 10%)
+  );
+  --light-text-color: whitesmoke;
+}
+
+blockquote {
+  background: var(--accent-color);
+  border-left: 10px solid #888;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C" "\201D" "\2018" "\2019";
+  border-radius: 0.1rem;
+}
+blockquote:before {
+  color: #888;
+  content: open-quote;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+blockquote p {
+  display: inline;
+}
+
+.captioned-figure {
+  background-color: var(--accent-color);
+  border-radius: 0.1rem;
+}
+.captioned-figure figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+}
+.caption {
+  text-align: center;
 }
 
 .login-button {
-    display: none;
+  display: none;
 }
 
 .modal {
-    display: none;
-    /* Hidden by default */
-    position: fixed;
-    /* Stay in place */
-    z-index: 1;
-    /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%;
-    /* Full width */
-    height: 100%;
-    /* Full height */
-    overflow: auto;
-    /* Enable scroll if needed */
-    /* Fallback color */
-    background-color: rgba(0, 0, 0, 0.4);
-    /* Black w/ opacity */
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .modal-close {
-    color: #aaa;
-    float: right;
-    font-size: 1rem;
-    font-weight: bold;
+  color: #aaa;
+  float: right;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 .login-modal-content {
-    line-height: 1.2;
-    font-family: 'Times New Roman';
-    border-radius: 0.3in;
-    background-repeat: repeat;
-    background-image: url("/images/id.png");
-    margin: 5% auto;
-    margin-top: 1%;
-    /* 15% from the top and centered */
-    padding: 0.15in;
-    border: 2px solid #888;
-    width: 4.8in;
+  line-height: 1.2;
+  font-family: "Times New Roman";
+  border-radius: 0.3in;
+  background-repeat: repeat;
+  background-image: url("/images/id.png");
+  margin: 5% auto;
+  margin-top: 1%;
+  padding: 0.15in;
+  border: 2px solid #888;
+  width: 4.8in;
 }
 
 .token-login-modal-content {
-    border-radius: 0.3in;
-    justify-content: center;
-    background-repeat: repeat;
-    background-image: url("/images/ourple.png");
-    margin: 15% auto;
-    padding: 0.15in;
-    background-size: 15px;
-    border: 2px solid #888;
-    width: 4.8in;
+  border-radius: 0.3in;
+  justify-content: center;
+  background-repeat: repeat;
+  background-image: url("/images/ourple.png");
+  margin: 15% auto;
+  padding: 0.15in;
+  background-size: 15px;
+  border: 2px solid #888;
+  width: 4.8in;
 }
 
 .confirmation-modal-content {
-    border-radius: 0.3in;
-    background-repeat: repeat;
-    background-image: url("/images/ourple.png");
-    margin: 15% auto;
-    padding: 0.15in;
-    background-size: 15px;
-    border: 2px solid #888;
-    width: 4.8in;
+  border-radius: 0.3in;
+  background-repeat: repeat;
+  background-image: url("/images/ourple.png");
+  margin: 15% auto;
+  padding: 0.15in;
+  background-size: 15px;
+  border: 2px solid #888;
+  width: 4.8in;
 }
 
 .login-messages {
-    background-size: 15px;
-    border-radius: 0.3in;
-    margin: auto;
-    margin-top: 10%;
-    background-color: rgba(0, 0, 0, 0.9);
-    text-align: center;
-    background-repeat: repeat;
-    background-image: url("/images/ourple.png");
-    padding: 0.15in;
-    border: 2px solid #888;
-    width: 4.8in;
-
+  background-size: 15px;
+  border-radius: 0.3in;
+  margin: auto;
+  margin-top: 10%;
+  background-color: rgba(0, 0, 0, 0.9);
+  text-align: center;
+  background-repeat: repeat;
+  background-image: url("/images/ourple.png");
+  padding: 0.15in;
+  border: 2px solid #888;
+  width: 4.8in;
 }
 
 .modal-close:hover,
 .modal-close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-
 body {
-    margin: 0;
-    line-height: 1.8;
+  margin: 0;
+  line-height: 1.8;
 }
 
 html {
-    font-family: '0xProto Nerd Font Mono';
-    font-size: .2in;
-    background-color: var(--page-bg-color);
-    color: var(--light-text-color);
-    background-image: url("/images/ourple.png");
-    background-repeat: repeat;
-    background-size: 15px;
-    background-attachment: fixed;
+  font-family: "0xProto Nerd Font Mono";
+  font-size: 0.2in;
+  background-color: var(--page-bg-color);
+  color: var(--light-text-color);
+  background-image: url("/images/ourple.png");
+  background-repeat: repeat;
+  background-size: 15px;
+  background-attachment: fixed;
 }
 
 .top-bar {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    min-width: 100%;
-    height: var(--topnav-height);
-    background-image: url("/images/oureen.png");
-    background-repeat: repeat;
-    background-size: 15px;
-    background-attachment: fixed;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  min-width: 100%;
+  height: var(--topnav-height);
+  background-image: url("/images/oureen.png");
+  background-repeat: repeat;
+  background-size: 15px;
+  background-attachment: fixed;
 
-    background-color: hsla(var(--nav-color-h), var(--nav-color-s), var(--nav-color-l), 0.8);
-    color: var(--light-text-color);
-
+  background-color: hsla(
+    var(--nav-color-h),
+    var(--nav-color-s),
+    var(--nav-color-l),
+    0.8
+  );
+  color: var(--light-text-color);
 }
 
 .top-bar a:hover {
-    background-color: rgba(100, 100, 100, 0.1);
+  background-color: rgba(100, 100, 100, 0.1);
 }
 
 .top-bar a {
-    box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
-    font-size: .3in;
-    width: 20%;
-    color: inherit;
-    text-align: center;
-    border: 2px solid var(--nav-color-darker-border);
-    background-color: rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
+  font-size: 0.3in;
+  width: 20%;
+  color: inherit;
+  text-align: center;
+  border: 2px solid var(--nav-color-darker-border);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
-
-
 .bottom-bar {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    min-width: 100%;
-    color: var(--light-text-color);
-
-
-
-
-
-
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  min-width: 100%;
+  color: var(--light-text-color);
 }
 
 .bottom-bar a {
-    font-size: .3in;
-    color: inherit;
-    text-align: center;
+  font-size: 0.3in;
+  color: inherit;
+  text-align: center;
 }
 
 .page-content {
-    max-width: 90%;
-    display: flex;
-    flex-direction: inherit;
-    justify-items: center;
-
-
-
+  max-width: 90%;
+  display: flex;
+  flex-direction: inherit;
+  justify-items: center;
 }
 
 .page-content p h1 h2 {
-    margin-left: 4%;
-    margin-right: 4%;
+  margin-left: 4%;
+  margin-right: 4%;
 }
 
 .page-content a {
-    color: inherit;
+  color: inherit;
 }
 
 .page-content img {
-    margin-top: 2%;
-    justify-self: center;
-    display: flex;
-    flex-shrink: 0;
-    align-self: center;
-    max-width: 100%;
+  margin-top: 2%;
+  justify-self: center;
+  display: flex;
+  flex-shrink: 0;
+  align-self: center;
+  max-width: 100%;
 }
 
-
-
-
 main {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    gap: 1vw;
-    justify-content: center;
-    align-items: flex-start;
-
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 1vw;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 main .shoutbox-container {
-    height: 30vw;
+  height: 30vw;
 }
 
-
-
 main .shoutbox-username {
-    color: whitesmoke;
+  color: whitesmoke;
 }
 
 main .shoutbox-username-editable {
-    cursor: pointer;
+  cursor: pointer;
 }
 
-
-
 main .shoutbox-messages {
-    height: 90%;
-    border: 2px solid #888;
-    overflow-y: scroll;
-
-
+  height: 90%;
+  border: 2px solid #888;
+  overflow-y: scroll;
 }
 
 .shoutbox-messages ul {
-    margin: 0;
-    padding: 0 2% 2% 0;
+  margin: 0;
+  padding: 0 2% 2% 0;
 }
 
 main .shoutbox-message {
-    display: flex;
-    overflow-wrap: anywhere;
-    border-bottom: 2px dotted #888;
-    text-align: left;
-    line-height: 1.3;
-
-
+  display: flex;
+  overflow-wrap: anywhere;
+  border-bottom: 2px dotted #888;
+  text-align: left;
+  line-height: 1.3;
 }
 
 .shoutbox-message p {
-    margin: 0;
+  margin: 0;
 }
 
 main .page-html {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 0;
-    flex-shrink: 1;
-    align-items: center;
-    flex-basis: var(--page-width);
-    background: rgba(0, 0, 0, 0.4);
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-    min-height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  flex-shrink: 1;
+  align-items: center;
+  flex-basis: var(--page-width);
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  min-height: calc(100vh - 150px);
 }
 
 main .shoutbox-ui {
-    display: none;
-    height: 10%;
-    flex-direction: row;
+  display: none;
+  height: 10%;
+  flex-direction: row;
 }
 
 .color-change-popup {
-    display: none;
-    position: absolute;
-    border-radius: 0.1in;
-    justify-content: center;
-    background-repeat: repeat;
-    background-image: url("/images/ourple.png");
-    padding: 0.15in;
-    background-size: 15px;
-    border: 2px solid #888;
+  display: none;
+  position: absolute;
+  border-radius: 0.1in;
+  justify-content: center;
+  background-repeat: repeat;
+  background-image: url("/images/ourple.png");
+  padding: 0.15in;
+  background-size: 15px;
+  border: 2px solid #888;
 }
 
-
 main .shoutbox-input {
-    width: 80%;
-    background: rgba(255, 255, 255, 0.1);
-    color: whitesmoke;
-    border: 2px solid #888;
+  width: 80%;
+  background: rgba(255, 255, 255, 0.1);
+  color: whitesmoke;
+  border: 2px solid #888;
 }
 
 main .shoutbox-send {
-    width: 20%;
-    height: 100%;
+  width: 20%;
+  height: 100%;
 }
 
 main .boxed {
-    margin: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.5rem;
-    border: 5px solid var(--nav-color-darker-border);
-    box-shadow: rgba(0, 0, 0, 0.2) 5px 2px 5px;
+  margin: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border: 5px solid var(--nav-color-darker-border);
+  box-shadow: rgba(0, 0, 0, 0.2) 5px 2px 5px;
 }
 
 main .side-col {
-    text-align: center;
-    width: 15%;
-    margin-top: var(--topnav-height);
+  text-align: center;
+  width: 15%;
+  margin-top: var(--topnav-height);
 }
 
-
-
 @media (max-width: 1600px) {
-    main {
-        flex-direction: column;
-        align-items: center;
-        padding-bottom: 3%;
-    }
+  main {
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 3%;
+  }
 
-    main>.side-col:last-child {
-        order: 1;
-    }
+  main > .side-col:last-child {
+    order: 1;
+  }
 
-    main .side-col {
-        width: 80%;
-        margin-top: 0;
-    }
+  main .side-col {
+    width: 80%;
+    margin-top: 0;
+  }
 
-    main .page-html {
-        flex-basis: auto;
-        width: 100%;
-        min-height: auto;
-    }
+  main .page-html {
+    flex-basis: auto;
+    width: 100%;
+    min-height: auto;
+  }
 
-    main .shoutbox-container {
-        width: 100%;
-        height: 60vh;
-    }
+  main .shoutbox-container {
+    width: 100%;
+    height: 60vh;
+  }
 
-    main .boxed {
-        width: 100%;
-        box-sizing: border-box;
-    }
+  main .boxed {
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
