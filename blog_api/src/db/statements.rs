@@ -14,6 +14,7 @@ pub const GET_USER_BY_TOKEN: &str = "SELECT * FROM users WHERE LOWER(token) LIKE
 pub const GET_USER_BY_ID: &str = "SELECT * FROM users WHERE id=?";
 pub const INSERT_USER: &str =
     "INSERT INTO users (id,display_name,token,color,associated_ip) VALUES (NULL,?,?,?,?)";
+pub const UPDATE_USER_COLOR: &str = "UPDATE users SET color=? WHERE (id=?)";
 
 //Post SQL
 pub const CREATE_POST_TABLE: &str = "CREATE TABLE IF NOT EXISTS posts (
@@ -48,7 +49,7 @@ pub const CREATE_COMMENT_TABLE: &str = "CREATE TABLE IF NOT EXISTS comments (
         FOREIGN KEY (user_id) REFERENCES users(id)
     )";
 pub const INSERT_COMMENT: &str =
-    "INSERT INTO comments (id,posted_under,user_id,display_name,content) VALUES (NULL,?,?,?,?)";
+    "INSERT INTO comments (id,posted_under,user_id,content) VALUES (NULL,?,?,?)";
 pub const GET_COMMENTS_WITH_POST_ID: &str = "SELECT * FROM comments WHERE posted_under=?";
 pub const UPDATE_COMMENT: &str =
     "UPDATE comments SET content=?,edited=1,created=CURRENT_TIMESTAMP WHERE id=?";

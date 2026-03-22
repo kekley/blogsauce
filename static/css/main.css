@@ -1,5 +1,4 @@
 :root {
-  --page-html-bg-transparent: rgba(color(#2a2828 lightness(-12.2%)), 0.7);
   --page-padding-inline: 2.1rem;
   --page-padding-block: 1.4rem;
   --page-width: 1080px;
@@ -15,46 +14,7 @@
     var(--nav-color-s),
     calc(var(--nav-color-l) - 20%)
   );
-  --nav-color-darker-fill: hsl(
-    var(--nav-color-h),
-    var(--nav-color-s),
-    calc(var(--nav-color-l) - 10%)
-  );
   --light-text-color: whitesmoke;
-}
-
-blockquote {
-  background: var(--accent-color);
-  border-left: 10px solid #888;
-  margin: 1.5em 10px;
-  padding: 0.5em 10px;
-  quotes: "\201C" "\201D" "\2018" "\2019";
-  border-radius: 0.1rem;
-}
-blockquote:before {
-  color: #888;
-  content: open-quote;
-  font-size: 4em;
-  line-height: 0.1em;
-  margin-right: 0.25em;
-  vertical-align: -0.4em;
-}
-blockquote p {
-  display: inline;
-}
-
-.captioned-figure {
-  background-color: var(--accent-color);
-  border-radius: 0.1rem;
-}
-.captioned-figure figure {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin: 0;
-}
-.caption {
-  text-align: center;
 }
 
 .login-button {
@@ -93,7 +53,37 @@ blockquote p {
   width: 4.8in;
 }
 
+.display-name-input {
+  color: black;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.no-padding-margin {
+  padding: 0;
+  margin: 0;
+}
+
+.login-titles {
+  text-align: center;
+  line-height: 1;
+}
+
+.bunuelo-image {
+  margin-top: 15%;
+  object-fit: scale-down;
+  width: 30%;
+  height: 100%;
+}
+
+.login-submit {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .token-login-modal-content {
+  border-radius: 0.3in;
+  line-height: 1.2;
   border-radius: 0.3in;
   justify-content: center;
   background-repeat: repeat;
@@ -106,6 +96,8 @@ blockquote p {
 }
 
 .confirmation-modal-content {
+  border-radius: 0.3in;
+  line-height: 1.2;
   border-radius: 0.3in;
   background-repeat: repeat;
   background-image: url("/images/ourple.png");
@@ -160,17 +152,10 @@ html {
   align-items: center;
   min-width: 100%;
   height: var(--topnav-height);
-  background-image: url("/images/oureen.png");
+  background-color: var(--accent-color);
   background-repeat: repeat;
   background-size: 15px;
   background-attachment: fixed;
-
-  background-color: hsla(
-    var(--nav-color-h),
-    var(--nav-color-s),
-    var(--nav-color-l),
-    0.8
-  );
   color: var(--light-text-color);
 }
 
@@ -179,13 +164,13 @@ html {
 }
 
 .top-bar a {
+  background-color: rgba(0, 0, 0, 0.1);
   box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
   font-size: 0.3in;
   width: 20%;
   color: inherit;
   text-align: center;
   border: 2px solid var(--nav-color-darker-border);
-  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .bottom-bar {
@@ -238,7 +223,10 @@ main {
 }
 
 main .shoutbox-container {
-  height: 30vw;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  gap: 5mm;
 }
 
 main .shoutbox-username {
@@ -287,9 +275,12 @@ main .page-html {
 }
 
 main .shoutbox-ui {
+  padding: 1mm;
   display: none;
   height: 10%;
   flex-direction: row;
+  gap: 1mm;
+  color: var(--light-text-color);
 }
 
 .color-change-popup {
@@ -305,15 +296,42 @@ main .shoutbox-ui {
 }
 
 main .shoutbox-input {
+  font-size: 1rem;
+  color: var(--light-text-color);
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--nav-color-darker-border);
+  height: 100%;
+  box-sizing: border-box;
+  resize: none;
+  margin: 0;
+  padding: 0;
   width: 80%;
-  background: rgba(255, 255, 255, 0.1);
-  color: whitesmoke;
-  border: 2px solid #888;
 }
-
-main .shoutbox-send {
+.shoutbox-send {
+  box-sizing: border-box;
+  height: 2rem;
+  width: 5rem;
+  box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
+  border: 2px solid var(--nav-color-darker-border);
+  background-color: var(--accent-color);
   width: 20%;
   height: 100%;
+}
+
+.shoutbox-send button {
+  padding: 0;
+  cursor: pointer;
+  font-family: "0xProto Nerd Font Mono";
+  color: whitesmoke;
+  font-size: 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.shoutbox-send button:hover {
+  background-color: rgba(100, 100, 100, 0.1);
 }
 
 main .boxed {

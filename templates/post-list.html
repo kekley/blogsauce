@@ -1,0 +1,2 @@
+{%- set section = get_section(path="_index.md") -%} {"posts" : [{% for page in
+section.pages %}"{{page.slug}}"{% if not loop.last %}, {% endif %}{% endfor %}]}

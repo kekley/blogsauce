@@ -23,6 +23,7 @@ use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr as _;
 use std::time::Duration;
+use tracing::{Level, event};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
@@ -89,27 +90,32 @@ pub struct Settings {
 }
 
 fn main() {
+    tracing_subscriber::fmt::init();
+    event!(Level::INFO, "Started Server");
+
     let ex = smol::Executor::new();
-    let (signal, shutdown) = unbounded::<()>();
+    let (shutdown_signal, shutdown) = unbounded::<()>();
 
     Parallel::new()
-        // Run four executor threads.
         .each(0..4, |_| future::block_on(ex.run(shutdown.recv())))
-        // Run the main future on the current thread.
         .finish(|| {
             future::block_on(async {
                 match server().await {
                     Ok(_) => {}
                     Err(err) => {
-                        eprintln!("Server exited with error: {err}");
+                        event!(Level::ERROR, "Server exited with error:{err}");
                     }
                 }
-                drop(signal);
+                drop(shutdown_signal);
             })
         });
 }
 
 async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let settings = Settings::parse();
+
+    event!(Level::INFO, "Parsed settings:{settings:?}");
+
     let Settings {
         database_path,
         listen_port,
@@ -119,14 +125,23 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         rate_limit_cleanup_interval_secs: _,
         rate_limit: _,
         splashes_path,
-    } = Settings::parse();
+    } = settings;
 
     let addr: SocketAddr = ([0, 0, 0, 0], listen_port).into();
 
     let db_connection_pool = CommentDb::create_db(&database_path);
 
+    event!(Level::INFO, "Connected to DB");
+
     let listener = TcpListener::bind(addr).await?;
+
+    event!(Level::INFO, "Listening on {addr}");
+
     if !json_posts_url.is_empty() {
+        event!(
+            Level::INFO,
+            "Looking for post list json at: {json_posts_url}"
+        );
         spawn(post_list_updater(
             post_list_update_interval_secs,
             json_posts_url,
@@ -135,11 +150,13 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .detach();
     }
     let _watcher = if !splashes_path.to_string_lossy().is_empty() {
+        event!(Level::INFO, "Watching splashes file at {splashes_path:?}");
+
         Some(splash_file_watcher(splashes_path))
     } else {
         None
     };
-    println!("Listening on http://{}", addr);
+
     let (mut shout_tx, _shout_rx) = broadcast(10);
     shout_tx.set_overflow(true);
 
@@ -167,20 +184,19 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             .and_then(|value| value.to_str().ok())
                             .map(|s| s.split(',').next().unwrap_or(s).trim());
                         let ip_addr = if let Some(origin) = origin {
-                            dbg!(origin);
                             IpAddr::from_str(origin).unwrap_or(ip_addr)
                         } else {
                             ip_addr
                         };
 
-                        println!("IP: {ip_addr}, Endpoint: {}", request.uri().path());
+                        event!(Level::INFO, "Received connection from: {ip_addr}");
 
                         handle_request(request, ip_addr, db, s)
                     }),
                 )
                 .await
             {
-                println!("Error serving connection: {:?}", err);
+                event!(Level::ERROR, "Error serving connection: {err}");
             }
         })
         .detach();
@@ -196,6 +212,7 @@ async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb)
             && let JsonValue::Array(posts) = &json["posts"]
         {
             let posts_str = posts.iter().flat_map(|v| v.as_str());
+            event!(Level::INFO, "Updated post list");
 
             db.update_posts(posts_str);
         }

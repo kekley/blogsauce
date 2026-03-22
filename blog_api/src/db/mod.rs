@@ -10,12 +10,13 @@ use thiserror::Error;
 
 use crate::models::ip::TruncatedIp;
 use crate::models::shout::{Shout, ShoutId};
-use crate::models::user::{User, UserId};
+use crate::models::user::{Color, User, UserId};
 use crate::models::{
     comment::{Comment, CommentId},
     post::{Post, PostId},
     star::Star,
 };
+use crate::server::RequestError;
 use statements::*;
 
 pub struct CommentDb {
@@ -24,8 +25,21 @@ pub struct CommentDb {
 
 #[derive(Debug, Error)]
 pub enum DbError {
-    #[error("{0}")]
-    SqliteError(#[from] rusqlite::Error),
+    #[error("Internal Error (whoopsie)")]
+    InternalError,
+    #[error("No Results From Query")]
+    NoResults,
+    #[error("Db Insertion violated unique constraints")]
+    NonUniqueError,
+}
+
+impl From<rusqlite::Error> for DbError {
+    fn from(value: rusqlite::Error) -> Self {
+        match value {
+            rusqlite::Error::QueryReturnedNoRows => Self::NoResults,
+            _ => Self::InternalError,
+        }
+    }
 }
 
 impl CommentDb {
@@ -57,7 +71,7 @@ impl CommentDb {
     pub fn from_pooled_conn(conn: PooledConnection<SqliteConnectionManager>) -> Self {
         Self { conn }
     }
-    pub fn edit_comment(&self, id: CommentId, comment: &str) -> Result<(), rusqlite::Error> {
+    pub fn edit_comment(&self, id: CommentId, comment: &str) -> Result<(), DbError> {
         let content = ammonia::clean(comment.trim());
         let mut statement = self.conn.prepare(UPDATE_COMMENT)?;
 
@@ -66,7 +80,7 @@ impl CommentDb {
         Ok(())
     }
 
-    pub fn delete_comment(&self, comment_id: CommentId) -> Result<(), rusqlite::Error> {
+    pub fn delete_comment(&self, comment_id: CommentId) -> Result<(), DbError> {
         let mut statement = self.conn.prepare(DELETE_COMMENT)?;
 
         statement.execute((comment_id,))?;
@@ -74,16 +88,16 @@ impl CommentDb {
         Ok(())
     }
 
-    pub fn get_comment_from_id(&self, id: i64) -> Result<Comment, rusqlite::Error> {
+    pub fn get_comment_from_id(&self, id: i64) -> Result<Comment, DbError> {
         let mut row = self
             .conn
             .prepare(GET_COMMENT_WITH_ID)
             .expect("Prepared statement for getting comment should be valid SQL");
 
-        row.query_one((id,), Comment::from_row)
+        Ok(row.query_one((id,), Comment::from_row)?)
     }
 
-    pub fn get_post_comments(&self, post_id: PostId) -> Result<Vec<Comment>, rusqlite::Error> {
+    pub fn get_post_comments(&self, post_id: PostId) -> Result<Vec<Comment>, DbError> {
         let mut comments_statement = self
             .conn
             .prepare(GET_COMMENTS_WITH_POST_ID)
@@ -96,23 +110,23 @@ impl CommentDb {
             .collect::<Vec<_>>())
     }
 
-    pub fn get_post_star_count(&self, post_id: PostId) -> Result<i32, rusqlite::Error> {
+    pub fn get_post_star_count(&self, post_id: PostId) -> Result<i32, DbError> {
         let mut star_count_statement = self
             .conn
             .prepare(GET_STAR_COUNT_WITH_POST_ID)
             .expect("Star count SQL should be valid");
-        star_count_statement
+        Ok(star_count_statement
             .query_one((post_id,), |row| row.get(0))
-            .map(|count: i32| count)
+            .map(|count: i32| count)?)
     }
 
-    pub fn get_post_with_ident(&self, ident: &str) -> Result<Post, rusqlite::Error> {
+    pub fn get_post_with_ident(&self, ident: &str) -> Result<Post, DbError> {
         let mut row = self
             .conn
             .prepare(GET_POST_WITH_IDENT)
             .expect("Prepared statement for getting postId should be valid SQL");
 
-        row.query_one((ident,), Post::from_row)
+        Ok(row.query_one((ident,), Post::from_row)?)
     }
     pub fn update_posts<S: AsRef<str>, I: IntoIterator<Item = S>>(&self, post_idents: I) {
         for ident in post_idents {
@@ -128,7 +142,7 @@ impl CommentDb {
         post_id: PostId,
         user_id: UserId,
         comment: &str,
-    ) -> Result<(), rusqlite::Error> {
+    ) -> Result<(), DbError> {
         let content = ammonia::clean(comment);
         let mut statement = self.conn.prepare(INSERT_COMMENT)?;
 
@@ -136,16 +150,12 @@ impl CommentDb {
         Ok(())
     }
 
-    pub fn star_post(&self, post_id: PostId, user_id: UserId) -> Result<(), rusqlite::Error> {
+    pub fn star_post(&self, post_id: PostId, user_id: UserId) -> Result<(), DbError> {
         let mut statement = self.conn.prepare(INSERT_STAR)?;
         statement.execute((user_id, post_id))?;
         Ok(())
     }
-    pub fn is_post_starred_by(
-        &self,
-        post_id: PostId,
-        user_id: UserId,
-    ) -> Result<bool, rusqlite::Error> {
+    pub fn is_post_starred_by(&self, post_id: PostId, user_id: UserId) -> Result<bool, DbError> {
         let mut statement = self.conn.prepare(IS_STARRED_BY_USER_ID)?;
         Ok(statement
             .query_one((post_id, user_id), Star::from_row)
@@ -157,29 +167,59 @@ impl CommentDb {
         display_name: &str,
         token: &str,
         ip: TruncatedIp,
-    ) -> Result<(), rusqlite::Error> {
-        let mut statement = self.conn.prepare(INSERT_USER)?;
+    ) -> Result<(), RequestError> {
+        let mut statement = self.conn.prepare(INSERT_USER).map_err(DbError::from)?;
         let mut rng = rand::rng();
         let color: u32 = rng.random();
-        statement.execute((display_name.trim(), token.trim(), color, ip))?;
+        statement
+            .execute((display_name.trim(), token.trim(), color, ip))
+            .map_err(|err| {
+                let err = DbError::from(err);
+
+                if let DbError::NonUniqueError = err {
+                    RequestError::UsernameTaken
+                } else {
+                    err.into()
+                }
+            })?;
+
         Ok(())
     }
 
-    pub fn get_user_from_token(&self, token: &str) -> Result<User, rusqlite::Error> {
-        let mut statement = self.conn.prepare(GET_USER_BY_TOKEN)?;
-        statement.query_one((token.trim(),), User::from_row)
+    pub fn get_user_from_token(&self, token: &str) -> Result<User, RequestError> {
+        let mut statement = self
+            .conn
+            .prepare(GET_USER_BY_TOKEN)
+            .map_err(DbError::from)?;
+
+        statement
+            .query_one((token.trim(),), User::from_row)
+            .map_err(|err| {
+                let err = DbError::from(err);
+                if let DbError::NoResults = err {
+                    crate::server::RequestError::InvalidToken
+                } else {
+                    err.into()
+                }
+            })
     }
 
-    pub fn get_shout_from_id(&self, shout_id: i64) -> Result<Shout, rusqlite::Error> {
+    pub fn change_user_color(&self, user_id: UserId, color: Color) -> Result<(), DbError> {
+        let mut statement = self.conn.prepare(UPDATE_USER_COLOR)?;
+        statement.execute((color, user_id))?;
+        Ok(())
+    }
+
+    pub fn get_shout_from_id(&self, shout_id: i64) -> Result<Shout, DbError> {
         let mut row = self
             .conn
             .prepare(GET_SHOUT_WITH_ID)
             .expect("Prepared statement for getting shout should be valid SQL");
 
-        row.query_one((shout_id,), Shout::from_row)
+        Ok(row.query_one((shout_id,), Shout::from_row)?)
     }
 
-    pub fn get_all_shouts(&self) -> Result<Vec<Shout>, rusqlite::Error> {
+    pub fn get_all_shouts(&self) -> Result<Vec<Shout>, DbError> {
         let mut shouts_statement = self
             .conn
             .prepare(GET_ALL_SHOUTS)
@@ -192,20 +232,20 @@ impl CommentDb {
             .collect::<Vec<_>>())
     }
 
-    pub fn add_shout(&self, user_id: UserId, content: &str) -> Result<(), rusqlite::Error> {
+    pub fn add_shout(&self, user_id: UserId, content: &str) -> Result<(), DbError> {
         let content = ammonia::clean(content.trim());
         let mut statement = self.conn.prepare(INSERT_SHOUT)?;
         statement.execute((user_id, content))?;
         Ok(())
     }
-    pub fn edit_shout(&self, shout_id: ShoutId, content: &str) -> Result<(), rusqlite::Error> {
+    pub fn edit_shout(&self, shout_id: ShoutId, content: &str) -> Result<(), DbError> {
         let content = ammonia::clean(content.trim());
         let mut statement = self.conn.prepare(UPDATE_SHOUT)?;
         statement.execute((content, shout_id))?;
 
         Ok(())
     }
-    pub fn delete_shout(&self, shout_id: ShoutId) -> Result<(), rusqlite::Error> {
+    pub fn delete_shout(&self, shout_id: ShoutId) -> Result<(), DbError> {
         let mut statement = self.conn.prepare(DELETE_SHOUT)?;
 
         statement.execute((shout_id,))?;
@@ -213,12 +253,12 @@ impl CommentDb {
         Ok(())
     }
 
-    pub(crate) fn get_user_by_id(&self, user_id: UserId) -> Result<User, rusqlite::Error> {
+    pub(crate) fn get_user_by_id(&self, user_id: UserId) -> Result<User, DbError> {
         let mut row = self
             .conn
             .prepare(GET_USER_BY_ID)
             .expect("Prepared statement for getting user should be valid SQL");
 
-        row.query_one((user_id,), User::from_row)
+        Ok(row.query_one((user_id,), User::from_row)?)
     }
 }

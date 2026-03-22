@@ -1,14 +1,14 @@
 +++
 
-title = "my impeccable timing"
-date = 2026-03-16
+title = "title"
+date = 2026-03-19
 +++
 
 Hello!
 
 Discord is rumored to be up for an [initial public offering](https://en.wikipedia.org/wiki/Initial_public_offering). As is tradition, the company is doing everything it can to
-make a quick buck in order to impress our feudal lords who will be evaluating it on the stock market. The details are a little muddy at this 
-point since their response to backlash has been damage control claims about who will need to verify and to delay the rollout until the 
+make a quick buck in order to impress our feudal lords who will be evaluating it on the stock market. The details on what's going to go down and when are a little muddy given
+their response to backlash has been damage control claims about who will need to verify and to delay the rollout until the 
 [second half of 2026](https://support.discord.com/hc/en-us/articles/38332670254231-Age-Assurance-Update-FAQ).
 
 {{ figure(img_path = "/posts/post2/delay.png",alt_text="A screenshot of Discord's age verification faq page informing of the rollout delay.",caption="I'm still not sure how age verification is going to do anything to stop adults from entering spaces meant for minors but okay maybe they're figuring that part out") }}
@@ -34,9 +34,10 @@ See the above.
 
 > We're committed to vendor transparency.
 
-It remains to be seen which company Discord will partner with for their face-scan age verification, but it's worth noting that their first choice was Persona, whose age verification software
+It remains to be seen which company Discord will partner with for their face-scan age verification going forward, but it's worth noting that their first choice was Persona, whose age verification software
 [performs 269 distinct verification checks and scours the internet and government sources for potential matches](https://www.therage.co/persona-age-verification/#:~:text=true%2E-,Beyond,years) 
-Additionally, the company has ties to [Palantir](https://en.wikipedia.org/wiki/Palantir#Controversies)'s Peter Thiel, a believer in "pre-crime" policing and a "post-democracy" government. Below is a small collection of Peter Thiel's best hits.
+Additionally, Persona is backed by Peter Thiel, founder of global surveillance company, [Palantir](https://en.wikipedia.org/wiki/Palantir#Controversies), who provide data collection and analysis tools to various government agencies, militaries and corporations. 
+Below I have included a small collection of Peter Thiel's greatest hits.
 
 >["I'm looking into parabiosis stuff, which I think is really interesting. This is where they did the young blood into older mice and they found that had a massive rejuvenating effect,"](https://www.vanityfair.com/news/2016/08/peter-thiel-wants-to-inject-himself-with-young-peoples-blood#:~:text=%E2%80%9CI%27m%20looking%20into%20parabiosis%20stuff%2C%20which%20I%20think%20is%20really%20interesting%2E%20This%20is%20where%20they%20did%20the%20young%20blood%20into%20older%20mice%20and%20they%20found%20that%20had%20a%20massive%20rejuvenating%20effect%2C%E2%80%9D)
 
@@ -45,16 +46,8 @@ Additionally, the company has ties to [Palantir](https://en.wikipedia.org/wiki/P
 *the context makes this next one worse i promise*
 >["I no longer believe that freedom and democracy are compatible."](https://www.cato-unbound.org/2009/04/13/peter-thiel/education-libertarian/#:~:text=I%20no%20longer%20believe%20that%20freedom%20and%20democracy%20are%20compatible%2E)  
 
-Discord has dropped the partnership with Persona after backlash, but their first choice does not inspire confidence in me.
-
-## i made a discord bot
-
-Before all this went down I started working on a Discord bot for streaming the audio of Youtube videos in a voice channel. Once upon a time these were really common as bots you could just add to your server, 
-but nowadays I think there's some Discord TOS that prohibits this and Youtube itself ends up blocking stuff that looks like bot activity, so all the public Discord music bots don't stream from Youtube anymore.
-
-If you really want a bot that plays stuff off of Youtube, your only at this point is to host it yourself. There are quite a few options in this space and there are two that I found with a quick search
-that are actively being worked on. [This one](https://github.com/umutxyp/MusicBot) and [this one](https://github.com/alan7383/playify). You've seen the heading of this section though, and yeah I made a bot for myself
-over [here](https://github.com/kekley/rock-dove) that just fit the use cases I saw in the servers I'm in. I'll probably be bringing this over to whatever platform I switch to once I decide it's not worth continuing on 
-Discord, but for now I thought I'd make this post and include a guide on how to set up the bot for yourself since that seems to be the barrier for most people who still want to use a Discord bot that supports Youtube.
-
-
+Discord has dropped the partnership with Persona after backlash, but their first choice does not inspire confidence in me. I've been looking at alternatives ([stoat.chat](https://stoat.chat/) looks promising) in the likely case I need to move my personal conversations off
+of the platform, but there is pretty much no company I trust given the current state of the world to not end up destroying their service once enough people are dependent on it. My personal pipe dream is that open source projects that provide
+self hostable alternatives for things that people normally default to 'cloud' services for will become a little more mainstream. I understand it's way too much to ask of anyone who doesn't already enjoy messing
+with software in their spare time, but it's hard for me to imagine a real solution to the problem of 'owning' your own data that doesn't rely on trusting a company or government. I feel a little like a conspiracy theorist at times but I've grown
+very skeptical about software that cannot be audited publicly. 

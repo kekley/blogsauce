@@ -14,16 +14,18 @@ use smol::Timer;
 
 use crate::{
     db::CommentDb,
+    json::extract_json_field,
     models::{shout::ShoutEvent, user::Color},
     server::{
         RequestError, RequestResult,
+        endpoints::{CONTENT_FIELD_NAME, SHOUT_ID_FIELD_NAME, TOKEN_FIELD_NAME},
         util::{extract_key_from_query, json_to_response, options_response, request_to_json},
     },
 };
 
 pub(crate) async fn post_shout_endpoint_post(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
     shout_events: Sender<Arc<ShoutEvent>>,
 ) -> RequestResult {
@@ -31,164 +33,107 @@ pub(crate) async fn post_shout_endpoint_post(
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let Ok(json) = request_to_json(request).await else {
-                response_object["error"] = "Invalid JSON in body".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            if let Some(token) = json["token"].as_str()
-                && let Ok(user) = db.get_user_from_token(token)
-            {
-                let Some(content) = json["content"].as_str() else {
-                    response_object["error"] = "Missing comment content".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
-                if content.is_empty() {
-                    response_object["error"] = "Empty comment".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                }
+            let json = request_to_json(request).await?;
+            let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
+            let user = db.get_user_from_token(token)?;
 
-                let r = match db.add_shout(user.get_id(), content) {
-                    Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
-                    Err(_err) => {
-                        response_object["error"] = "Error posting shout".into();
-                        Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
-                    }
-                };
-                if r.is_ok() {
-                    shout_events
-                        .broadcast(Arc::new(ShoutEvent {
-                            display_name: user.get_display_name().to_string(),
-                            content: ammonia::clean(content),
-                            user_color: user.get_color().to_string(),
-                            user_id: user.get_id(),
-                        }))
-                        .await
-                        .unwrap();
-                }
-                r
-            } else {
-                response_object["error"] = "Invalid user token".into();
-                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
+            let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
+            if content.is_empty() {
+                return Err(RequestError::EmptyFieldError(
+                    CONTENT_FIELD_NAME.try_into().unwrap(),
+                ));
             }
+
+            let shout_result = match db.add_shout(user.get_id(), content) {
+                Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
+                Err(_err) => {
+                    response_object["error"] = "Error posting shout".into();
+                    Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
+                }
+            };
+            if shout_result.is_ok() {
+                shout_events
+                    .broadcast(Arc::new(ShoutEvent {
+                        display_name: user.get_display_name().to_string(),
+                        content: ammonia::clean(content),
+                        user_color: user.get_color().to_string(),
+                        user_id: user.get_id(),
+                    }))
+                    .await
+                    .unwrap();
+            }
+            shout_result
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on Shout Post endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }
 
 pub(crate) async fn edit_shout_endpoint_post(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
 ) -> RequestResult {
-    let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let Ok(json) = request_to_json(request).await else {
-                response_object["error"] = "Invalid JSON in body".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            if let Some(token) = json["token"].as_str()
-                && let Ok(_) = db.get_user_from_token(token)
-            {
-                let Some(content) = json["content"].as_str() else {
-                    response_object["error"] = "Missing comment content".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
-                if content.is_empty() {
-                    response_object["error"] = "Empty comment".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                }
-
-                let Some(shout_id) = json["shout_id"].as_i64() else {
-                    response_object["error"] = "Missing shout_id".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
-                let Ok(shout) = db.get_shout_from_id(shout_id) else {
-                    response_object["error"] = "Invalid shout id".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
-
-                match db.edit_shout(shout.get_id(), content) {
-                    Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
-                    Err(_err) => {
-                        response_object["error"] = "Error posting shout".into();
-                        Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
-                    }
-                }
-            } else {
-                response_object["error"] = "Invalid user token".into();
-                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
+            let json = request_to_json(request).await?;
+            let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
+            let user = db.get_user_from_token(token)?;
+            let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
+            if content.is_empty() {
+                return Err(RequestError::EmptyFieldError(
+                    CONTENT_FIELD_NAME.try_into().unwrap(),
+                ));
             }
+            let shout_id: i64 = extract_json_field(SHOUT_ID_FIELD_NAME, &json)?;
+
+            let shout = db.get_shout_from_id(shout_id)?;
+
+            if shout.get_user_id() != user.get_id() {
+                return Err(RequestError::NotAllowed);
+            }
+
+            db.edit_shout(shout.get_id(), content)?;
+
+            Ok(json_to_response(object! {}, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on Shout Post endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }
 
 pub(crate) async fn delete_shout_endpoint_post(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
 ) -> RequestResult {
-    let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let Ok(json) = request_to_json(request).await else {
-                response_object["error"] = "Invalid JSON in body".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            if let Some(token) = json["token"].as_str()
-                && let Ok(_) = db.get_user_from_token(token)
-            {
-                let Some(shout_id) = json["shout_id"].as_i64() else {
-                    response_object["error"] = "Missing shout_id".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
-                let Ok(shout) = db.get_shout_from_id(shout_id) else {
-                    response_object["error"] = "Invalid shout id".into();
-                    return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-                };
+            let json = request_to_json(request).await?;
+            let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
+            let user = db.get_user_from_token(token)?;
 
-                match db.delete_shout(shout.get_id()) {
-                    Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
-                    Err(_err) => {
-                        response_object["error"] = "Error posting shout".into();
-                        Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
-                    }
-                }
-            } else {
-                response_object["error"] = "Invalid user token".into();
-                Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
+            let shout_id: i64 = extract_json_field(SHOUT_ID_FIELD_NAME, &json)?;
+
+            let shout = db.get_shout_from_id(shout_id)?;
+
+            if shout.get_user_id() != user.get_id() {
+                return Err(RequestError::NotAllowed);
             }
+
+            db.delete_shout(shout.get_id())?;
+            Ok(json_to_response(object! {}, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on Shout Post endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }
 
+//TODO this just gets all the shouts for now
 ///Returns the 10 most recent comments. `shouts_before` can be specified to get the 10 most recent
 ///comments before the specified date
 pub(crate) async fn get_shouts_endpoint_post(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
 ) -> RequestResult {
     let mut response_object = object! {};
@@ -234,19 +179,13 @@ pub(crate) async fn get_shouts_endpoint_post(
 
             Ok(json_to_response(response_object, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on get shouts endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }
 
-pub(crate) async fn subscribe_shouts_endpoint(
+pub(crate) async fn subscribe_shouts_endpoint_get(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
     shout_events: Sender<Arc<ShoutEvent>>,
 ) -> Result<Response<BoxBody<Bytes, Infallible>>, RequestError> {
@@ -290,7 +229,6 @@ pub(crate) async fn subscribe_shouts_endpoint(
                         }
 
                         _ = Timer::after(Duration::from_secs(15)).fuse() => {
-                            // SSE heartbeat comment
                             yield Ok::<Frame<Bytes>, Infallible>(
                                 Frame::data(Bytes::from(": keep-alive\n\n"))
                             );
@@ -311,9 +249,6 @@ pub(crate) async fn subscribe_shouts_endpoint(
                 .body(boxed)
                 .unwrap())
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on new shouts endpoint");
-            Ok(json_to_response(object! {}, StatusCode::METHOD_NOT_ALLOWED))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }

@@ -25,6 +25,7 @@ pub(crate) fn extract_key_from_query<'a>(query: &'a str, key: &str) -> Option<Co
         .find(|(query_key, _)| query_key.eq(&key))
         .and_then(|(_, value)| urlencoding::decode(value).ok())
 }
+
 pub(crate) fn json_to_response(
     json: JsonValue,
     status_code: StatusCode,

@@ -3,71 +3,62 @@ use std::{fmt::Write as _, net::IpAddr};
 use hyper::{Method, Request, StatusCode};
 use json::object;
 use rand::{TryRngCore as _, rngs::OsRng};
-use rusqlite::ErrorCode;
 
 use crate::{
     db::CommentDb,
-    models::ip::TruncatedIp,
+    json::extract_json_field,
+    models::{ip::TruncatedIp, user::Color},
     server::{
-        RequestResult,
+        RequestError, RequestResult,
+        endpoints::{COLOR_FIELD_NAME, TOKEN_FIELD_NAME},
         util::{json_to_response, options_response, request_to_json},
     },
 };
 
+const DISPLAY_NAME_FIELD: &str = "display_name";
+
 pub(crate) async fn verify_token_endpoint_get(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
+    _addr: IpAddr,
     db: CommentDb,
 ) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            let Ok(json) = request_to_json(request).await else {
-                response_object["error"] = "Invalid JSON in body".into();
-                return Ok(json_to_response(response_object, StatusCode::BAD_REQUEST));
-            };
-            if let Some(token) = json["token"].as_str()
-                && let Ok(_) = db.get_user_from_token(token)
-            {
-                response_object["is_valid"] = true.into();
-                Ok(json_to_response(response_object, StatusCode::OK))
-            } else {
-                response_object["is_valid"] = false.into();
-                Ok(json_to_response(response_object, StatusCode::OK))
-            }
+            let json = request_to_json(request).await?;
+
+            let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
+            let _user = db.get_user_from_token(token)?;
+
+            response_object["is_valid"] = true.into();
+            Ok(json_to_response(response_object, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on verify user endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(crate::server::RequestError::InvalidMethod),
     }
 }
+
 pub(crate) async fn change_color_endpoint_post(
     request: Request<hyper::body::Incoming>,
-    addr: IpAddr,
-    _db: CommentDb,
+    _addr: IpAddr,
+    db: CommentDb,
 ) -> RequestResult {
-    let mut response_object = object! {};
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
-            response_object["error"] = "not done with this yet oops".into();
-            Ok(json_to_response(
-                response_object,
-                StatusCode::NOT_IMPLEMENTED,
-            ))
+            let json = request_to_json(request).await?;
+
+            let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
+            let color: &str = extract_json_field(COLOR_FIELD_NAME, &json)?;
+            let user = db.get_user_from_token(token)?;
+
+            let color = Color::from_hex_str(color)?;
+
+            db.change_user_color(user.get_id(), color)?;
+
+            Ok(json_to_response(object! {}, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on verify user endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }
 
@@ -83,51 +74,31 @@ pub(crate) async fn register_name_endpoint_post(
         Method::POST => {
             let json = request_to_json(request).await?;
 
-            if let Some(user) = json["display_name"].as_str()
-                && !user.is_empty()
-            {
-                let mut buf = [0u8; 16];
-                match OsRng.try_fill_bytes(&mut buf) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        eprintln!("IP: {addr}: failed to generate user token : {err}");
-                        response_object["error"] = "Error generating user token".into();
-                    }
-                }
+            let desired_name: &str = extract_json_field(DISPLAY_NAME_FIELD, &json)?;
 
-                let mut token = String::new();
-
-                for byte in buf {
-                    let _ = write!(&mut token, "{byte:02X}");
-                }
-
-                match db.add_user(user, &token, truncated_ip) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        if err.sqlite_error_code() == Some(ErrorCode::ConstraintViolation) {
-                            eprintln!("IP: {addr}: error adding user: {err}");
-                            response_object["error"] = "NAME_TAKEN".into();
-                            return Ok(json_to_response(response_object, StatusCode::OK));
-                        }
-                        eprintln!("IP: {addr}: error adding user: {err}");
-                        response_object["error"] = "Internal Error".into();
-                        return Ok(json_to_response(response_object, StatusCode::OK));
-                    }
-                };
-
-                response_object["token"] = token.into();
-                Ok(json_to_response(response_object, StatusCode::OK))
-            } else {
-                response_object["error"] = "No display_name field".into();
-                Ok(json_to_response(response_object, StatusCode::OK))
+            if desired_name.is_empty() {
+                return Err(crate::server::RequestError::EmptyFieldError(
+                    DISPLAY_NAME_FIELD.try_into().unwrap(),
+                ));
             }
+
+            let mut buf = [0u8; 16];
+            match OsRng.try_fill_bytes(&mut buf) {
+                Ok(_) => {}
+                Err(_err) => {}
+            }
+
+            let mut token = heapless::String::<32>::new();
+
+            for byte in buf {
+                let _ = write!(&mut token, "{byte:02X}");
+            }
+
+            db.add_user(desired_name, &token, truncated_ip)?;
+
+            response_object[TOKEN_FIELD_NAME] = token.as_str().into();
+            Ok(json_to_response(response_object, StatusCode::OK))
         }
-        _ => {
-            eprintln!("IP: {addr} Invalid Method on Comment Get endpoint");
-            Ok(json_to_response(
-                response_object,
-                StatusCode::METHOD_NOT_ALLOWED,
-            ))
-        }
+        _ => Err(RequestError::InvalidMethod),
     }
 }

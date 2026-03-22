@@ -1,29 +1,55 @@
-{% extends "base.html" %}
-{% block content %}
-    {% for page in paginator.pages %}
-    <div class = "post-content">
-        <a style="text-decoration:none;" href="{{page.permalink}}">
-            <h1>{{ page.title}}</h1>
-        </a>
-        <div style = "margin-bottom:1in;border-bottom:5px solid whitesmoke;border-top:5px dotted whitesmoke;">
-            {{ page.content | safe }}
-            <div style="display:flex;justify-content:center"><span style="font-style:bold;text-align:center">END POST</span></div>
-        </div>
-    </div>
-    {% endfor %}
-            <div class="bottom-bar">
-                {% if paginator.previous %}
-                    <a class="previous" href="{{ paginator.previous }}">‹ Previous</a>
-                {% endif %}
-                {% if paginator.next %}
-                    <a class="next" href="{{ paginator.next }}">Next ›</a>
-                {% endif %}
-            </div>
-            <div class="bottom-bar">
-                <a href='/archive'>
-                   Archive
-                </a>
-            </div>
+{% extends "base.html" %} {% block content %}
+<link
+  rel="stylesheet"
+  href="{{get_url(path='/css/post.css',cachebust=true)}}"
+/>
+<div
+  id="visible-posts-list"
+  hidden=""
+  data-posts='{"post_idents" : [{% for page in paginator.pages %}"{{page.slug}}"{% if not loop.last %}, {% endif %}{% endfor %}]}'
+></div>
+{% for page in paginator.pages %}
+<a class="title-link" href="{{page.permalink}}">
+  <h1>{{ page.title}}</h1>
+</a>
+<div
+  style="border-bottom: 5px solid whitesmoke; border-top: 5px dotted whitesmoke"
+>
+  {{ page.content | safe }}
+  <div style="display: flex; justify-content: center">
+    <span style="font-style: bold; text-align: center">END POST</span>
+  </div>
+</div>
+<link
+  rel="stylesheet"
+  href="{{ get_url(path='/css/comments.css',cachebust=true)}}"
+/>
+<details>
+  <summary>Comments!</summary>
+  <div class="comment-input">
+    <label>Leave a comment:</label>
 
+    <textarea id="comment-input-{{page.slug}}"></textarea>
+    <div class="submit-button-row">
+      <div class="submit-button">
+        <button id="comment-submit-{{page.slug}}">Submit</button>
+      </div>
+    </div>
+  </div>
+  <div class="comments-list">
+    <ol id="comments-list-{{page.slug}}"></ol>
+  </div>
+</details>
+{% endfor %}
+<div class="bottom-bar">
+  {% if paginator.previous %}
+  <a class="previous" href="{{ paginator.previous }}">‹ Previous</a>
+  {% endif %} {% if paginator.next %}
+  <a class="next" href="{{ paginator.next }}">Next ›</a>
+  {% endif %}
+</div>
+<div class="bottom-bar">
+  <a href="/archive"> Archive </a>
+</div>
 
 {% endblock content %}

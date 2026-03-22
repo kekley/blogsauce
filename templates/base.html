@@ -1,126 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>fuck it we blog</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="{{ get_url(path='/js/blog.js',cachebust=true) }}" defer="defer"></script>
+        <link rel="stylesheet" href="{{ get_url(path='/css/main.css',cachebust=true) }}">
+        <link href="/fonts/stylesheet.css" rel="stylesheet">
+    </head>
 
-<head>
-    <meta charset="utf-8">
-    <title>fuck it we blog</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/css/style.css">
-    <script src="/js/blog.js" defer></script>
-    <link href="/fonts/stylesheet.css" rel="stylesheet">
+    <body>
+        <main>
+            <div class="side-col"></div>
+            <div class="page-html">
+                <div class="top-bar">
+                    <a href='/'>
+                        home
+                    </a>
+                    <a href='/gallery'>
+                        gallery
+                    </a>
+                    <a href='/fun'>
+                        toys+games
+                    </a>
+                    <a href='/about'>
+                        about
+                    </a>
 
-</head>
-
-<body>
-    <main>
-        <div class="side-col">
-
-        </div>
-        <div class="page-html">
-            <div class="top-bar">
-                <a href='/'>
-                    home
-                </a>
-                <a href='/gallery'>
-                    gallery
-                </a>
-                <a href='/fun'>
-                    toys+games
-                </a>
-                <a href='/about'>
-                    about
-                </a>
+                </div>
+                <div class="page-content">
+                    {% block content %}{% endblock content %}
+                </div>
 
             </div>
-            <div class="page-content">
-                {% block content %} {% endblock content %}
-            </div>
 
-        </div>
-
-        <div class="side-col">
-            <div class="boxed">
-                <b>shoutbox</b>
-                <div class="shoutbox-container">
-                    <div id="shoutbox-scroll" class="shoutbox-messages">
-                        <ul id="shoutbox-messages">
-                        </ul>
-                    </div>
-                    <div class="login-button">
-                        <button>login</button>
-                    </div>
-                    <div id="shoutbox-ui" class="shoutbox-ui">
-                        <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
-                        <button id="shoutbox-send" class="shoutbox-send">send</button>
+            <div class="side-col">
+                <div class="boxed">
+                    <b>shoutbox</b>
+                    <div class="shoutbox-container">
+                        <div id="shoutbox-scroll" class="shoutbox-messages">
+                            <ul id="shoutbox-messages"></ul>
+                        </div>
+                        <div class="login-button">
+                            <button>login</button>
+                        </div>
+                        <div id="shoutbox-ui" class="shoutbox-ui">
+                            <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
+                            <div class="shoutbox-send">
+                                <button id="shoutbox-send" >send</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
 
-        </div>
+        </main>
 
-    </main>
-
-    <div id="confirmation-modal" class="modal">
-        <div class="confirmation-modal-content" style="border-radius:0.3in;line-height:1.2;">
-            <button id="confirmation-modal-close-button" class="modal-close">&times;</button>
-            <div id="confirmation-message" style="text-align:center">Hi</div>
-        </div>
-    </div>
-    <div id="token-login-modal" class="modal">
-        <div class="token-login-modal-content" style="border-radius:0.3in;line-height:1.2;">
-            <button id="token-login-modal-close-button" class="modal-close">&times;</button>
-            <div style="text-align:center">
-                <b id="token-login-name"></b>
-            </div>
-            <p id="token-login-message" style="text-align:center">that username is already registered. If you would like
-                to login please enter the token that was given to you when you registered</p>
-            <div style="display:flex;justify-content:center">
-                <input id="token-login-token" type="text" placeholder="enter the token here"></input>
-                <button id="token-login-button">login</button>
+        <div id="confirmation-modal" class="modal">
+            <div class="confirmation-modal-content">
+                <button id="confirmation-modal-close-button" class="modal-close">&times;</button>
+                <div id="confirmation-message" style="text-align:center">Hi</div>
             </div>
         </div>
-    </div>
-
-
-
-
-    <div id="login-modal" class="modal">
-        <div class="login-messages" id="login-messages">this is a login screen. enter your username in the DISPLAY NAME
-            box. you should stay signed in as long as you don't clear your browser cookies or use a private browser
-            window.</div>
-        <div class="login-modal-content" style="">
-            <button id="modal-close-button" class="modal-close">&times;</button>
-            <div style="text-align:center;line-height:1;">
-
-                <b style="font-size:24px;margin:0;padding:0;">REPUBLICO DE COLOMBIA</b>
-                <div style="font-size:20px;margin:0;padding:0;">IDENTIFICACION DE MASCOTAS</div>
-                <div style="font-size:16px;margin:0;padding:0;">CEDULA DE CIUDADANIA</div>
-                <div style="font-size:12px;margin:0;padding:0;">FELINA Y CANINA</div>
-            </div>
-            <div style="display:flex;flex-direction:row;justify-content:space-between;">
-                <div>
-                    <div style="font-size:20px;margin:0;padding:0;">NOMBRE</div>
-                    <input id="display-name-input" style="color:black;background: rgba(255, 255, 255, 0.1);" type="text"
-                        placeholder="DISPLAY NAME" name="displayname" required>
-                    <div style="font-size:20px;margin:0;padding:0;"><br>RAZA</div>
-                    <b style="font-size:20px;margin:0;padding:0;">CRIOLLO</b>
-                    <div style="font-size:20px;margin:0;padding:0;"><br>SEXO</div>
-                    <b style="font-size:20px;margin:0;padding:0;">MACHO</b>
+        <div id="token-login-modal" class="modal">
+            <div class="token-login-modal-content">
+                <button id="token-login-modal-close-button" class="modal-close">&times;</button>
+                <div style="text-align:center">
+                    <b id="token-login-name"></b>
                 </div>
-                <img src="/images/bunuelo.png" style="margin-top:15%;object-fit:scale-down;width:30%;height:100%;">
-            </div>
-            <div style="width:100%;display:flex;justify-content:center;">
-                <button id="login-submit" type="submit">login</button>
+                <p id="token-login-message" style="text-align:center">that username is already registered. If you would like to login please enter the token that was given to you when you registered</p>
+                <div style="display:flex;justify-content:center">
+                    <input id="token-login-token" type="text" placeholder="enter the token here"></input>
+                    <button id="token-login-button">login</button>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="color-change-popup" class="color-change-popup">
-        <div style="font-size:16px;">Change your name color if you please :)<div>
-        <div>
-            <input type="color"></input>
-            <button>Ok!</button>
+        <div id="login-modal" class="modal">
+            <div class="login-messages" id="login-messages">this is a login screen. enter your username in the DISPLAY NAME box. you should stay signed in as long as you don't clear your browser cookies or use a private browser window.</div>
+            <div class="login-modal-content" style="">
+                <button id="modal-close-button" class="modal-close">&times;</button>
+                <div class="login-titles">
+                    <b class="no-padding-margin" style="font-size:24px;">REPUBLICO DE COLOMBIA</b>
+                    <div class="no-padding-margin" style="font-size:20px;">IDENTIFICACION DE MASCOTAS</div>
+                    <div class="no-padding-margin" style="font-size:16px;">CEDULA DE CIUDADANIA</div>
+                    <div class="no-padding-margin" style="font-size:12px;">FELINA Y CANINA</div>
+                </div>
+                <div style="display:flex;flex-direction:row;justify-content:space-between;">
+                    <div>
+                        <div class="no-padding-margin" style="font-size:20px;">NOMBRE</div>
+                        <input class="display-name-input" id="display-name-input" type="text" placeholder="DISPLAY NAME" name="displayname" required="required">
+                        <div class="no-padding-margin" style="font-size:20px;"><br>RAZA</div>
+                        <b class="no-padding-margin" style="font-size:20px;">CRIOLLO</b>
+                        <div class="no-padding-margin" style="font-size:20px;"><br>SEXO</div>
+                        <b class="no-padding-margin" style="font-size:20px">MACHO</b>
+                    </div>
+                    <img class="bunuelo-image" src="/images/bunuelo.png">
+                </div>
+                <div class="login-submit">
+                    <button id="login-submit" type="submit">log in</button>
+                </div>
+            </div>
         </div>
-    </div>
-</body>
+        <div id="color-change-popup" class="color-change-popup">
+            <div style="font-size:16px;">Change your name color if you please :)<div>
+                    <div>
+                        <input type="color"></input>
+                        <button>change it please</button>
+                    </div>
+                </div>
+            </body>
 
-</html>
+        </html>
