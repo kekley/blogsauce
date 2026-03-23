@@ -107,9 +107,12 @@
 
         <div id="color-change-popup" class="color-change-popup">
             <div style="font-size:16px;">Change your name color if you please :)</div>
-                    <div>
+                    <div style="display:flex;flex-direction:column;gap:1mm;">
+                        <label style="font-size:10px;" for="new-name-color">click here to pick a color!</label>
                         <input id="new-name-color" type="color"></input>
-                        <button id="change-color-button">change it please</button>
+                        <div class="color-change-button">
+                            <button id="change-color-button">change it please</button>
+                        </div>
                     </div>
                 </div>
             </body>

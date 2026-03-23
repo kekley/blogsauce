@@ -13,6 +13,21 @@ export function generate_comment_html(comment, timezone_offset) {
   if (comment.edited) {
     edited_or_created = "Edited";
   }
+
+  let edit_buttons = "";
+  if (comment.editable) {
+    edit_buttons = `
+        <div style="display:flex;flex-direction:row;gap:1mm;">
+            <div class="comment-edit-button">
+                <button id="comment-edit-${comment.id}">Edit</button>
+            </div>
+            <div class="comment-edit-button">
+                <button id="comment-delete-${comment.id}">Delete</button>
+            </div>
+          </div>
+        `;
+  }
+
   let date = new Date(comment.created);
   date.setMinutes(date.getMinutes() - timezone_offset);
   let username_class = "shoutbox-username";
@@ -21,11 +36,14 @@ export function generate_comment_html(comment, timezone_offset) {
   }
 
   return `<li id="comment-${comment.id}" class="comment-container">
-        <div class="comment-header">
-          <div class="comment-time">${edited_or_created} at ${date.toLocaleString()}</div>
-          <div class="comment-username">
-          <span style="color:${comment.user_color};"class="${username_class}">${comment.display_name}</span>
-          </div>
+        <div class="comment-top-bar">
+            <div class="comment-header">
+              <div class="comment-time">${edited_or_created} at ${date.toLocaleString()}</div>
+              <div class="comment-username">
+                  <span style="color:${comment.user_color};"class="${username_class}">${comment.display_name}</span>
+              </div>
+            </div>
+            ${edit_buttons}
         </div>
         <div class="comment-content">${comment.content}</div>
       </li>`;

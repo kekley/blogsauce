@@ -104,7 +104,7 @@ export async function register_display_name(display_name) {
   }
 }
 
-export async function changeColor(token, color) {
+export async function change_user_color(token, color) {
   const info = {
     token: token,
     color: color,

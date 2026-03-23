@@ -309,8 +309,6 @@ main .shoutbox-input {
 }
 .shoutbox-send {
   box-sizing: border-box;
-  height: 2rem;
-  width: 5rem;
   box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
   border: 2px solid var(--nav-color-darker-border);
   background-color: var(--accent-color);
@@ -331,6 +329,30 @@ main .shoutbox-input {
 }
 
 .shoutbox-send button:hover {
+  background-color: rgba(100, 100, 100, 0.1);
+}
+.color-change-button {
+  display: flex;
+  align-content: center;
+  box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.2) 2px 2px 2px;
+  border: 2px solid var(--nav-color-darker-border);
+  background-color: var(--accent-color);
+  width: 50%;
+}
+.color-change-button button {
+  padding: 0;
+  cursor: pointer;
+  font-family: "0xProto Nerd Font Mono";
+  color: whitesmoke;
+  font-size: 15px;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.color-change-button button:hover {
   background-color: rgba(100, 100, 100, 0.1);
 }
 

@@ -29,9 +29,12 @@ pub(crate) async fn verify_token_endpoint_get(
             let json = request_to_json(request).await?;
 
             let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
-            let _user = db.get_user_from_token(token)?;
+            let user = db.get_user_from_token(token)?;
 
             response_object["is_valid"] = true.into();
+            response_object["display_name"] = user.get_display_name().into();
+            response_object["current_color"] = user.get_color().to_string().into();
+
             Ok(json_to_response(response_object, StatusCode::OK))
         }
         _ => Err(crate::server::RequestError::InvalidMethod),
