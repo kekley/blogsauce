@@ -222,28 +222,28 @@ main {
   align-items: flex-start;
 }
 
-main .shoutbox-container {
+.shoutbox-container {
   height: 70vh;
   display: flex;
   flex-direction: column;
   gap: 5mm;
 }
 
-main .shoutbox-username {
+.shoutbox-username {
   color: whitesmoke;
 }
 
-main .shoutbox-username-editable {
+.shoutbox-username-editable {
   cursor: pointer;
 }
 
-main .shoutbox-messages {
+.shoutbox-messages {
   height: 90%;
   border: 2px solid #888;
   overflow-y: scroll;
 }
 
-.shoutbox-messages ul {
+.shoutbox-messages ol {
   margin: 0;
   padding: 0 2% 2% 0;
 }

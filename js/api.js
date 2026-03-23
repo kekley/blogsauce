@@ -221,7 +221,7 @@ export async function delete_comment(comment_id, token) {
 }
 
 export async function post_comment(token, post, content) {
-  console.log(post, content);
+  console.log(post, content, token);
   const info = {
     token: token,
     post: post,

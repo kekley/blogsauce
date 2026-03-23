@@ -39,7 +39,7 @@
                     <b>shoutbox</b>
                     <div class="shoutbox-container">
                         <div id="shoutbox-scroll" class="shoutbox-messages">
-                            <ul id="shoutbox-messages"></ul>
+                            <ol id="shoutbox-messages"></ol>
                         </div>
                         <div class="login-button">
                             <button>login</button>
@@ -59,13 +59,14 @@
 
         <div id="confirmation-modal" class="modal">
             <div class="confirmation-modal-content">
-                <button id="confirmation-modal-close-button" class="modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
                 <div id="confirmation-message" style="text-align:center">Hi</div>
             </div>
         </div>
+
         <div id="token-login-modal" class="modal">
             <div class="token-login-modal-content">
-                <button id="token-login-modal-close-button" class="modal-close">&times;</button>
+                <button  class="modal-close">&times;</button>
                 <div style="text-align:center">
                     <b id="token-login-name"></b>
                 </div>
@@ -76,10 +77,11 @@
                 </div>
             </div>
         </div>
+
         <div id="login-modal" class="modal">
             <div class="login-messages" id="login-messages">this is a login screen. enter your username in the DISPLAY NAME box. you should stay signed in as long as you don't clear your browser cookies or use a private browser window.</div>
             <div class="login-modal-content" style="">
-                <button id="modal-close-button" class="modal-close">&times;</button>
+                <button class="modal-close">&times;</button>
                 <div class="login-titles">
                     <b class="no-padding-margin" style="font-size:24px;">REPUBLICO DE COLOMBIA</b>
                     <div class="no-padding-margin" style="font-size:20px;">IDENTIFICACION DE MASCOTAS</div>
@@ -102,11 +104,12 @@
                 </div>
             </div>
         </div>
+
         <div id="color-change-popup" class="color-change-popup">
-            <div style="font-size:16px;">Change your name color if you please :)<div>
+            <div style="font-size:16px;">Change your name color if you please :)</div>
                     <div>
-                        <input type="color"></input>
-                        <button>change it please</button>
+                        <input id="new-name-color" type="color"></input>
+                        <button id="change-color-button">change it please</button>
                     </div>
                 </div>
             </body>
