@@ -33,7 +33,7 @@
                 </div>
 
             </div>
-
+<link rel="stylesheet" href="{{ get_url(path='/css/shoutbox.css',cachebust=true) }}">
             <div class="side-col">
                 <div class="boxed">
                     <b>shoutbox</b>
@@ -41,8 +41,10 @@
                         <div id="shoutbox-scroll" class="shoutbox-messages">
                             <ol id="shoutbox-messages"></ol>
                         </div>
+                        <div class="login-container">
                         <div class="login-button">
                             <button>login</button>
+                        </div>
                         </div>
                         <div id="shoutbox-ui" class="shoutbox-ui">
                             <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
@@ -56,24 +58,35 @@
             </div>
 
         </main>
+<link rel="stylesheet" href="{{ get_url(path='/css/modal.css',cachebust=true) }}">
 
         <div id="confirmation-modal" class="modal">
             <div class="confirmation-modal-content">
-                <button class="modal-close">&times;</button>
+                <div class="modal-close">
+                <div class="modal-button">
+                <button >&times;</button>
+                </div>
+                </div>
                 <div id="confirmation-message" style="text-align:center">Hi</div>
             </div>
         </div>
 
         <div id="token-login-modal" class="modal">
             <div class="token-login-modal-content">
-                <button  class="modal-close">&times;</button>
+                <div class="modal-close">
+                    <div class="modal-button">
+                <button >&times;</button>
+                    </div>
+                </div>
                 <div style="text-align:center">
                     <b id="token-login-name"></b>
                 </div>
                 <p id="token-login-message" style="text-align:center">that username is already registered. If you would like to login please enter the token that was given to you when you registered</p>
                 <div style="display:flex;justify-content:center">
                     <input id="token-login-token" type="text" placeholder="enter the token here"></input>
+                <div class="modal-button">
                     <button id="token-login-button">login</button>
+                </div >
                 </div>
             </div>
         </div>
@@ -81,7 +94,11 @@
         <div id="login-modal" class="modal">
             <div class="login-messages" id="login-messages">this is a login screen. enter your username in the DISPLAY NAME box. you should stay signed in as long as you don't clear your browser cookies or use a private browser window.</div>
             <div class="login-modal-content" style="">
-                <button class="modal-close">&times;</button>
+                <div class="modal-close">
+                <div class="modal-button">
+                <button >&times;</button>
+                </div>
+                </div>
                 <div class="login-titles">
                     <b class="no-padding-margin" style="font-size:24px;">REPUBLICO DE COLOMBIA</b>
                     <div class="no-padding-margin" style="font-size:20px;">IDENTIFICACION DE MASCOTAS</div>
@@ -99,7 +116,7 @@
                     </div>
                     <img class="bunuelo-image" src="/images/bunuelo.png">
                 </div>
-                <div class="login-submit">
+                <div class="modal-button" class="login-submit">
                     <button id="login-submit" type="submit">log in</button>
                 </div>
             </div>
@@ -115,6 +132,35 @@
                         </div>
                     </div>
                 </div>
-            </body>
+ <template id="comment-template">
+    <li class="comment-container">
+        <div class="comment-top-bar">
+            <div class="comment-header">
+              <div id="comment-time-template" class="comment-time"></div>
+              <div class="comment-username">
+                  <span id="username-template" class="username-span"></span>
+              </div>
+            </div>
+            <div id="comment-edit-buttons-template" style="display:flex;flex-direction:row;gap:1mm;">
+            <div class="comment-edit-button">
+                <button id="comment-edit-button-template">Edit</button>
+            </div>
+            <div class="comment-edit-button">
+                <button id="comment-delete-button-template">Delete</button>
+            </div>
+          </div>
+        </div>
+        <div id="comment-content-template" class="comment-content"></div>
+   </li>
+</template>
+<template id="comment-text-box-template">
+<div class="comment-input"><textarea id="comment-edit-input-template"></textarea></div>
+</template>
+<template id="shout-template">
+<li class="shoutbox-message">
+    <span id="shout-username-template" class="username-span"></span><p id="shout-content-template"></p>
+    </li>
+</template>
+           </body>
 
         </html>

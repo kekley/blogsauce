@@ -9,6 +9,8 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::models::ip::TruncatedIp;
+use crate::models::joins::comments::JoinedComment;
+use crate::models::joins::shouts::JoinedShout;
 use crate::models::shout::{Shout, ShoutId};
 use crate::models::user::{Color, User, UserId};
 use crate::models::{
@@ -97,13 +99,13 @@ impl CommentDb {
         Ok(row.query_one((id,), Comment::from_row)?)
     }
 
-    pub fn get_post_comments(&self, post_id: PostId) -> Result<Vec<Comment>, DbError> {
+    pub fn get_post_comments(&self, post_id: PostId) -> Result<Vec<JoinedComment>, DbError> {
         let mut comments_statement = self
             .conn
-            .prepare(GET_COMMENTS_WITH_POST_ID)
+            .prepare(JOIN_COMMENTS_AND_USERS_BY_POST_ID)
             .expect("SQL statement for getting comments should be valid");
 
-        let comment_rows = comments_statement.query_map((post_id,), Comment::from_row)?;
+        let comment_rows = comments_statement.query_map((post_id,), JoinedComment::from_row)?;
 
         Ok(comment_rows
             .flat_map(|result| result.ok())
@@ -219,15 +221,15 @@ impl CommentDb {
         Ok(row.query_one((shout_id,), Shout::from_row)?)
     }
 
-    pub fn get_all_shouts(&self) -> Result<Vec<Shout>, DbError> {
+    pub fn get_all_shouts(&self) -> Result<Vec<JoinedShout>, DbError> {
         let mut shouts_statement = self
             .conn
-            .prepare(GET_ALL_SHOUTS)
+            .prepare(GET_JOINED_SHOUTS)
             .expect("SQL statement for getting comments should be valid");
 
-        let comment_rows = shouts_statement.query_map((), Shout::from_row)?;
+        let shouts_rows = shouts_statement.query_map((), JoinedShout::from_row)?;
 
-        Ok(comment_rows
+        Ok(shouts_rows
             .flat_map(|result| result.ok())
             .collect::<Vec<_>>())
     }

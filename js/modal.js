@@ -12,7 +12,6 @@ export function set_up_modal_close_button(modal) {
   });
 
   const close_button = modal.querySelector(".modal-close");
-  console.log(close_button);
   close_button.onclick = function () {
     modal.style.display = "none";
   };

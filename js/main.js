@@ -5,7 +5,10 @@ import {
   change_user_color,
   subscribe_shouts,
 } from "./api.js";
-import { generate_shout_html, generate_comment_html } from "./html-bits.js";
+import {
+  generate_shout_element,
+  generate_comment_element,
+} from "./html-bits.js";
 import {
   bind_button_to_open_modal,
   set_up_modal_close_button,
@@ -13,15 +16,23 @@ import {
 
 import { register_display_name } from "./api.js";
 
-import { get_comments, post_comment } from "./api.js";
+import {
+  get_comments,
+  post_comment,
+  delete_comment,
+  edit_comment,
+} from "./api.js";
 
 function do_login() {
   const login_buttons = document.getElementsByClassName("login-button");
   for (const button of login_buttons) {
     button.style.display = "none";
   }
-  const shoutbox_ui = document.getElementById("shoutbox-ui");
-  shoutbox_ui.style.display = "flex";
+  const elements_to_show = document.getElementsByClassName("show-on-login");
+
+  for (const element of elements_to_show) {
+    element.style.display = "block";
+  }
   const login_modal = document.getElementById("login-modal");
   login_modal.style.display = "none";
   const token_login_modal = document.getElementById("token-login-modal");
@@ -29,9 +40,9 @@ function do_login() {
 }
 
 function do_logout() {
-  const login_buttons = document.getElementsByClassName("login-button");
+  const login_buttons = document.getElementsByClassName("login-container");
   for (const button of login_buttons) {
-    button.style.display = "block";
+    button.style.display = "flex";
   }
   const shoutbox_ui = document.getElementById("shoutbox-ui");
   shoutbox_ui.style.display = "none";
@@ -61,16 +72,13 @@ async function init_shoutbox() {
   //Populate the shoutbox messages
   const token = localStorage.getItem("token");
   const response = await get_shouts(null, token);
-  console.log(response);
   const shout_list = document.getElementById("shoutbox-messages");
   shout_list.innerHTML = "";
   const shouts_array = response["shouts"];
   const scrollArea = document.getElementById("shoutbox-scroll");
   for (const shout of shouts_array) {
-    let shout_html = generate_shout_html(shout);
-    const shout_template = document.createElement("template");
-    shout_template.innerHTML = shout_html;
-    shout_list.append(shout_template.content);
+    let shout_element = generate_shout_element(shout);
+    shout_list.append(shout_element);
   }
   scrollArea.scrollTop = scrollArea.scrollHeight;
 
@@ -81,10 +89,8 @@ async function init_shoutbox() {
     const should_scroll_bottom =
       scrollArea.scrollTop + scrollArea.clientHeight >=
       scrollArea.scrollHeight - 1;
-    const shout_html = generate_shout_html(shout);
-    const shout_template = document.createElement("template");
-    shout_template.innerHTML = shout_html;
-    shout_list.append(shout_template.content);
+    const shout_element = generate_shout_element(shout);
+    shout_list.append(shout_element);
     if (should_scroll_bottom) {
       scrollArea.scrollTop = scrollArea.scrollHeight;
     }
@@ -107,7 +113,6 @@ async function init_shoutbox() {
     if (!("error" in response)) {
       shoutbox_textarea.value = "";
     }
-    console.log(response);
   };
 }
 
@@ -145,6 +150,102 @@ async function init_comments() {
   }
 }
 
+function on_comment_edit(comment_id) {
+  const comment_edit_button = document.getElementById(
+    `comment-edit-button${comment_id}`,
+  );
+  const comment_delete_button = document.getElementById(
+    `comment-delete-button${comment_id}`,
+  );
+  const comment_content = document.getElementById(
+    `comment-content${comment_id}`,
+  );
+  const old_content = comment_content.textContent;
+  const text_edit_template = document.getElementById(
+    "comment-text-box-template",
+  );
+  const new_text_edit = document.importNode(text_edit_template.content, true);
+  const text_area = new_text_edit.querySelector("#comment-edit-input-template");
+  text_area.id = `comment-edit-input${comment_id}`;
+  text_area.value = old_content;
+  comment_content.replaceChildren(new_text_edit);
+  comment_edit_button.innerHTML = "Save";
+  comment_delete_button.innerHTML = "Cancel";
+  comment_edit_button.onclick = async function () {
+    on_comment_save(comment_id);
+  };
+  comment_delete_button.onclick = async function () {
+    on_comment_edit_cancel(comment_id, old_content);
+  };
+}
+
+async function on_comment_delete(comment_id) {
+  if (confirm("Are you sure you want to delete this comment?")) {
+    const token = localStorage.getItem("token");
+    const response = await delete_comment(comment_id, token);
+    if (!("error" in response)) {
+      const comment_container = document.querySelector(
+        `#comment-container${comment_id}`,
+      );
+      comment_container.remove();
+    }
+  }
+}
+
+async function on_comment_save(comment_id) {
+  const comment_edit_button = document.getElementById(
+    `comment-edit-button${comment_id}`,
+  );
+  const comment_delete_button = document.getElementById(
+    `comment-delete-button${comment_id}`,
+  );
+  const comment_content = document.getElementById(
+    `comment-content${comment_id}`,
+  );
+
+  const content = document
+    .getElementById(`comment-edit-input${comment_id}`)
+    .value.trim();
+  if (content === "") {
+    return;
+  }
+  const token = localStorage.getItem("token");
+  const response = await edit_comment(comment_id, content, token);
+  if (!("error" in response)) {
+    comment_edit_button.innerHTML = "Edit";
+    comment_edit_button.onclick = function () {
+      on_comment_edit(comment_id);
+    };
+    comment_delete_button.innerHTML = "Delete";
+    comment_delete_button.onclick = async function () {
+      on_comment_delete(comment_id);
+    };
+    comment_content.innerHTML = content;
+  }
+}
+
+function on_comment_edit_cancel(comment_id, old_content) {
+  const comment_edit_button = document.getElementById(
+    `comment-edit-button${comment_id}`,
+  );
+  const comment_delete_button = document.getElementById(
+    `comment-delete-button${comment_id}`,
+  );
+
+  const comment_content = document.getElementById(
+    `comment-content${comment_id}`,
+  );
+  comment_content.innerHTML = old_content;
+  comment_edit_button.innerHTML = "Edit";
+  comment_edit_button.onclick = function () {
+    on_comment_edit(comment_id);
+  };
+  comment_delete_button.innerHTML = "Delete";
+  comment_delete_button.onclick = async function () {
+    on_comment_delete(comment_id);
+  };
+}
+
 async function refresh_comments_for(post_list) {
   const token = localStorage.getItem("token");
   const response = await get_comments(post_list, token);
@@ -156,10 +257,26 @@ async function refresh_comments_for(post_list) {
     post_comments_list.innerHTML = "";
     if ("comments" in post) {
       for (const comment of post.comments) {
-        const comment_html = generate_comment_html(comment, timezone_offset);
-        const comment_template = document.createElement("template");
-        comment_template.innerHTML = comment_html;
-        post_comments_list.append(comment_template.content);
+        const comment_id = comment.id;
+        const comment_element = generate_comment_element(
+          comment,
+          timezone_offset,
+        );
+        if (comment.editable) {
+          const comment_edit_button = comment_element.querySelector(
+            `#comment-edit-button${comment_id}`,
+          );
+          const comment_delete_button = comment_element.querySelector(
+            `#comment-delete-button${comment_id}`,
+          );
+          comment_edit_button.onclick = function () {
+            on_comment_edit(comment_id);
+          };
+          comment_delete_button.onclick = function () {
+            on_comment_delete(comment_id);
+          };
+        }
+        post_comments_list.append(comment_element);
       }
     }
   }
@@ -214,7 +331,6 @@ function set_up_login_modals() {
         token_login_modal.style.display = "block";
       } else {
         message_area.innerHTML = error;
-        console.log(JSON.stringify(result));
       }
     } else if ("token" in result) {
       const token = result["token"].trim();
@@ -237,7 +353,7 @@ function set_up_login_modals() {
 function set_up_color_change_popup() {
   // Clicking your own username opens the color change popup
   document.addEventListener("click", function (event) {
-    if (event.target.classList.contains("shoutbox-username-editable")) {
+    if (event.target.classList.contains("username-span-editable")) {
       popup.style.display = "block";
       popup.style.left = event.pageX + "px";
       popup.style.top = event.pageY + "px";
@@ -248,7 +364,7 @@ function set_up_color_change_popup() {
   const popup = document.getElementById("color-change-popup");
   document.addEventListener("click", function (event) {
     if (
-      !event.target.classList.contains("shoutbox-username-editable") &&
+      !event.target.classList.contains("username-span-editable") &&
       !popup.contains(event.target)
     ) {
       popup.style.display = "none";
@@ -267,7 +383,7 @@ function set_up_color_change_popup() {
     const response = await change_user_color(token, color);
     if (!("error" in response)) {
       const display_names_to_change = document.getElementsByClassName(
-        "shoutbox-username-editable",
+        "username-span-editable",
       );
       localStorage.setItem("current_color", color);
       for (const name of display_names_to_change) {

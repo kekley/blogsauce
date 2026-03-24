@@ -189,7 +189,11 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             ip_addr
                         };
 
-                        event!(Level::INFO, "Received connection from: {ip_addr}");
+                        event!(
+                            Level::INFO,
+                            "Received connection from: {ip_addr} for {}",
+                            request.uri().path()
+                        );
 
                         handle_request(request, ip_addr, db, s)
                     }),

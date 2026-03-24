@@ -26,9 +26,14 @@
 />
 <details>
   <summary>Comments!</summary>
-  <div class="comment-input">
-    <label>Leave a comment:</label>
+  <div class="login-container">
+  <div class="login-button">
+      <button>login</button>
+  </div>
+  </div>
 
+  <div class="comment-input show-on-login">
+    <label>Leave a comment:</label>
     <textarea id="comment-input-{{page.slug}}"></textarea>
     <div class="submit-button-row">
       <div class="submit-button">
@@ -40,6 +45,7 @@
     <ol id="comments-list-{{page.slug}}"></ol>
   </div>
 </details>
+
 {% endfor %}
 <div class="bottom-bar">
   {% if paginator.previous %}
@@ -51,5 +57,4 @@
 <div class="bottom-bar">
   <a href="/archive"> Archive </a>
 </div>
-
 {% endblock content %}

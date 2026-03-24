@@ -180,25 +180,21 @@ pub(crate) async fn get_comments_endpoint_post(
                         continue;
                     }
                 };
-                dbg!(&comments);
                 let star_count = db.get_post_star_count(post.get_id()).unwrap_or_default();
 
                 let mut post_json = object! {post_ident:post.get_ident(),comments:[],stars:0};
 
                 for comment in comments {
-                    let Ok(comment_user) = db.get_user_by_id(comment.get_user_id()) else {
-                        continue;
-                    };
                     let mut comment_json = object! {};
-                    comment_json["id"] = comment.get_id().into();
-                    comment_json["user_color"] = comment_user.get_color().to_string().into();
-                    comment_json["display_name"] = comment_user.get_display_name().into();
+                    comment_json["id"] = comment.get_comment_id().into();
                     comment_json["content"] = comment.get_content().into();
+                    comment_json["display_name"] = comment.get_user_display_name().into();
+                    comment_json["user_color"] = comment.get_user_color().to_string().into();
                     comment_json["editable"] = user
                         .as_ref()
                         .is_some_and(|user| comment.get_user_id() == user.get_id())
                         .into();
-                    comment_json["created"] = comment.get_datetime().to_string().into();
+                    comment_json["created"] = comment.updated_on().to_string().into();
                     comment_json["edited"] = comment.was_edited().into();
                     let _ = post_json["comments"].push(comment_json);
                 }

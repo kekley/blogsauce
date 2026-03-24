@@ -50,7 +50,12 @@ pub const CREATE_COMMENT_TABLE: &str = "CREATE TABLE IF NOT EXISTS comments (
     )";
 pub const INSERT_COMMENT: &str =
     "INSERT INTO comments (id,posted_under,user_id,content) VALUES (NULL,?,?,?)";
-pub const GET_COMMENTS_WITH_POST_ID: &str = "SELECT * FROM comments WHERE posted_under=?";
+pub const JOIN_COMMENTS_AND_USERS_BY_POST_ID: &str =
+    "SELECT comments.id, users.id, comments.content, comments.edited, comments.created, users.display_name, users.color, users.banned
+FROM comments 
+INNER JOIN users 
+ON comments.user_id = users.id
+WHERE comments.posted_under=?";
 pub const UPDATE_COMMENT: &str =
     "UPDATE comments SET content=?,edited=1,created=CURRENT_TIMESTAMP WHERE id=?";
 pub const DELETE_COMMENT: &str = "DELETE FROM comments WHERE id=?";
@@ -66,7 +71,7 @@ pub const CREATE_SHOUTS_TABLE: &str = "CREATE TABLE IF NOT EXISTS shouts (
         FOREIGN KEY (user_id) REFERENCES users(id)
     )";
 pub const GET_SHOUT_WITH_ID: &str = "SELECT * FROM shouts WHERE (id=?)";
-pub const GET_ALL_SHOUTS: &str = "SELECT * FROM shouts";
+pub const GET_JOINED_SHOUTS: &str = "SELECT shouts.id, shouts.user_id, shouts.content, users.display_name, users.color, users.banned FROM shouts INNER JOIN users ON users.id = shouts.user_id";
 pub const INSERT_SHOUT: &str = "INSERT INTO shouts (id,user_id,content) VALUES (NULL,?,?)";
 pub const UPDATE_SHOUT: &str =
     "UPDATE shouts SET content=?,edited=1,created=CURRENT_TIMESTAMP WHERE id=?";

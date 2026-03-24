@@ -3,6 +3,46 @@
   rel="stylesheet"
   href="{{get_url(path='/css/post.css',cachebust=true)}}"
 />
+<div
+  id="visible-posts-list"
+  hidden=""
+  data-posts='{"post_idents" : ["{{page.slug}}" ]}'
+></div>
+
 <h1 class="title">{{ page.title }}</h1>
-<p class="subtitle"><strong>{{ page.date }}</strong></p>
-{{ page.content | safe }} {% endblock content %}
+<div
+  style="border-bottom: 5px solid whitesmoke; border-top: 5px dotted whitesmoke"
+>
+{{ page.content | safe }} 
+  <div style="display: flex; justify-content: center">
+    <span style="font-style: bold; text-align: center">END POST</span>
+  </div>
+</div>
+
+<link
+  rel="stylesheet"
+  href="{{ get_url(path='/css/comments.css',cachebust=true)}}"
+/>
+<details>
+  <summary>Comments!</summary>
+  <div class="comment-input">
+    <label>Leave a comment:</label>
+
+    <textarea id="comment-input-{{page.slug}}"></textarea>
+    <div class="submit-button-row">
+      <div class="submit-button">
+        <button id="comment-submit-{{page.slug}}">Submit</button>
+      </div>
+    </div>
+  </div>
+  <div class="comments-list">
+    <ol id="comments-list-{{page.slug}}"></ol>
+  </div>
+</details>
+<div class="bottom-bar">
+  <a href="/archive"> Archive </a>
+</div>
+
+
+
+{% endblock content %}
