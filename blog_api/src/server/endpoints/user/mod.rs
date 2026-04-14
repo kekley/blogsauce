@@ -3,6 +3,7 @@ use std::{fmt::Write as _, net::IpAddr};
 use hyper::{Method, Request, StatusCode};
 use json::object;
 use rand::{TryRngCore as _, rngs::OsRng};
+use tracing::{Level, event};
 
 use crate::{
     db::CommentDb,
@@ -86,10 +87,10 @@ pub(crate) async fn register_name_endpoint_post(
             }
 
             let mut buf = [0u8; 16];
-            match OsRng.try_fill_bytes(&mut buf) {
-                Ok(_) => {}
-                Err(_err) => {}
-            }
+            OsRng.try_fill_bytes(&mut buf).map_err(|err| {
+                event!(Level::ERROR, "OS Error: {err}");
+                RequestError::InternalError
+            })?;
 
             let mut token = heapless::String::<32>::new();
 

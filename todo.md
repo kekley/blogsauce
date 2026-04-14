@@ -8,9 +8,9 @@
 6. ~~joins on fetches for comments/shouts~~
 7. ~~update individual post pages~~
 8. split up comments and shouts into separate files
-9. split up css into files
-10. update modal buttons
-11. login button if not logged in
+9. ~~split up css into files~~
+10. ~~update modal buttons~~
+11. ~~login button if not logged in~~
 
 # blogs i like
 - https://suboptimalism.neocities.org/

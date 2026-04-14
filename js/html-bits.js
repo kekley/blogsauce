@@ -6,7 +6,7 @@ export function generate_shout_element(shout) {
   new_shout.querySelector("li").id = `shout${shout.id}`;
   username.removeAttribute("id");
   content.removeAttribute("id");
-  content.innerHTML = ":" + shout.content;
+  content.innerHTML = shout.content;
   username.innerHTML = shout.display_name;
   username.style = `color:${shout.user_color};`;
   if (shout.editable) {

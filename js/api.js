@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "https://stuff.kekley.online";
 
 export async function get_splash() {
   const location = API_URL + `/getSplash`;

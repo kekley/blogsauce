@@ -166,6 +166,7 @@ pub(crate) async fn get_shouts_endpoint_post(
                 shout_json["display_name"] = display_name.into();
                 shout_json["user_color"] = color.to_string().into();
                 shout_json["content"] = shout.get_content().into();
+                shout_json["id"] = shout.get_shout_id().into();
                 shout_json["editable"] = user_opt
                     .as_ref()
                     .is_some_and(|user| user.get_id() == shout.get_user_id())

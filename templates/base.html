@@ -33,7 +33,7 @@
                 </div>
 
             </div>
-<link rel="stylesheet" href="{{ get_url(path='/css/shoutbox.css',cachebust=true) }}">
+            <link rel="stylesheet" href="{{ get_url(path='/css/shoutbox.css',cachebust=true) }}">
             <div class="side-col">
                 <div class="boxed">
                     <b>shoutbox</b>
@@ -41,15 +41,17 @@
                         <div id="shoutbox-scroll" class="shoutbox-messages">
                             <ol id="shoutbox-messages"></ol>
                         </div>
-                        <div class="login-container">
-                        <div class="login-button">
-                            <button>login</button>
+                        <div class="login-container" hidden="">
+                            <div class="login-button">
+                                <button>pick a username to chat!</button>
+                            </div>
                         </div>
-                        </div>
-                        <div id="shoutbox-ui" class="shoutbox-ui">
-                            <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
-                            <div class="shoutbox-send">
-                                <button id="shoutbox-send" >send</button>
+                        <div class="show-on-login" hidden="">
+                            <div id="shoutbox-ui" class="shoutbox-ui">
+                                <textarea id="shoutbox-textarea" class="shoutbox-input"></textarea>
+                                <div class="shoutbox-send">
+                                    <button id="shoutbox-send">send</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -58,14 +60,14 @@
             </div>
 
         </main>
-<link rel="stylesheet" href="{{ get_url(path='/css/modal.css',cachebust=true) }}">
+        <link rel="stylesheet" href="{{ get_url(path='/css/modal.css',cachebust=true) }}">
 
         <div id="confirmation-modal" class="modal">
             <div class="confirmation-modal-content">
                 <div class="modal-close">
-                <div class="modal-button">
-                <button >&times;</button>
-                </div>
+                    <div class="modal-button">
+                        <button >&times;</button>
+                    </div>
                 </div>
                 <div id="confirmation-message" style="text-align:center">Hi</div>
             </div>
@@ -75,7 +77,7 @@
             <div class="token-login-modal-content">
                 <div class="modal-close">
                     <div class="modal-button">
-                <button >&times;</button>
+                        <button >&times;</button>
                     </div>
                 </div>
                 <div style="text-align:center">
@@ -84,9 +86,11 @@
                 <p id="token-login-message" style="text-align:center">that username is already registered. If you would like to login please enter the token that was given to you when you registered</p>
                 <div style="display:flex;justify-content:center">
                     <input id="token-login-token" type="text" placeholder="enter the token here"></input>
-                <div class="modal-button">
-                    <button id="token-login-button">login</button>
-                </div >
+                    <div style="display:flex;justify-contents:center;">
+                        <div class="modal-button">
+                            <button id="token-login-button">Log In</button>
+                        </div >
+                    </div>
                 </div>
             </div>
         </div>
@@ -95,9 +99,9 @@
             <div class="login-messages" id="login-messages">this is a login screen. enter your username in the DISPLAY NAME box. you should stay signed in as long as you don't clear your browser cookies or use a private browser window.</div>
             <div class="login-modal-content" style="">
                 <div class="modal-close">
-                <div class="modal-button">
-                <button >&times;</button>
-                </div>
+                    <div class="modal-button">
+                        <button >&times;</button>
+                    </div>
                 </div>
                 <div class="login-titles">
                     <b class="no-padding-margin" style="font-size:24px;">REPUBLICO DE COLOMBIA</b>
@@ -116,51 +120,57 @@
                     </div>
                     <img class="bunuelo-image" src="/images/bunuelo.png">
                 </div>
-                <div class="modal-button" class="login-submit">
-                    <button id="login-submit" type="submit">log in</button>
+                <div style="display:flex;justify-contents:center;">
+                    <div class="login-submit">
+                        <button id="login-submit" type="submit">Log In</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="color-change-popup" class="color-change-popup">
             <div style="font-size:16px;">Change your name color if you please :)</div>
-                    <div style="display:flex;flex-direction:column;gap:1mm;">
-                        <label style="font-size:10px;" for="new-name-color">click here to pick a color!</label>
-                        <input id="new-name-color" type="color"></input>
-                        <div class="color-change-button">
-                            <button id="change-color-button">change it please</button>
+            <div style="display:flex;flex-direction:column;gap:1mm;">
+                <label style="font-size:10px;" for="new-name-color">click here to pick a color!</label>
+                <input id="new-name-color" type="color"></input>
+                <div class="color-change-button">
+                    <button id="change-color-button">change it please</button>
+                </div>
+            </div>
+        </div>
+        <template id="comment-template">
+            <li class="comment-container">
+                <div class="comment-top-bar">
+                    <div class="comment-header">
+                        <div id="comment-time-template" class="comment-time"></div>
+                        <div class="comment-username">
+                            <span id="username-template" class="username-span"></span>
+                        </div>
+                    </div>
+                    <div id="comment-edit-buttons-template" style="display:flex;flex-direction:row;gap:1mm;">
+                        <div class="comment-edit-button">
+                            <button id="comment-edit-button-template">Edit</button>
+                        </div>
+                        <div class="comment-edit-button">
+                            <button id="comment-delete-button-template">Delete</button>
                         </div>
                     </div>
                 </div>
- <template id="comment-template">
-    <li class="comment-container">
-        <div class="comment-top-bar">
-            <div class="comment-header">
-              <div id="comment-time-template" class="comment-time"></div>
-              <div class="comment-username">
-                  <span id="username-template" class="username-span"></span>
-              </div>
+                <div id="comment-content-template" class="comment-content"></div>
+            </li>
+        </template>
+        <template id="comment-text-box-template">
+            <div class="comment-input">
+                <textarea id="comment-edit-input-template"></textarea>
             </div>
-            <div id="comment-edit-buttons-template" style="display:flex;flex-direction:row;gap:1mm;">
-            <div class="comment-edit-button">
-                <button id="comment-edit-button-template">Edit</button>
-            </div>
-            <div class="comment-edit-button">
-                <button id="comment-delete-button-template">Delete</button>
-            </div>
-          </div>
-        </div>
-        <div id="comment-content-template" class="comment-content"></div>
-   </li>
-</template>
-<template id="comment-text-box-template">
-<div class="comment-input"><textarea id="comment-edit-input-template"></textarea></div>
-</template>
-<template id="shout-template">
-<li class="shoutbox-message">
-    <span id="shout-username-template" class="username-span"></span><p id="shout-content-template"></p>
-    </li>
-</template>
-           </body>
+        </template>
+        <template id="shout-template">
+            <li class="shoutbox-message">
+                <p>
+                    <span id="shout-username-template" class="username-span"></span>:<span id="shout-content-template"></span>
+                </p>
+            </li>
+        </template>
+    </body>
 
-        </html>
+</html>

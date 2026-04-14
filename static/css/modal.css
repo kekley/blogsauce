@@ -16,6 +16,11 @@
   justify-content: end;
 }
 
+.modal-close button {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
 .login-modal-content {
   line-height: 1.2;
   font-family: "Times New Roman";

@@ -24,14 +24,14 @@ import {
 } from "./api.js";
 
 function do_login() {
-  const login_buttons = document.getElementsByClassName("login-button");
+  const login_buttons = document.getElementsByClassName("login-container");
   for (const button of login_buttons) {
-    button.style.display = "none";
+    button.hidden = true;
   }
   const elements_to_show = document.getElementsByClassName("show-on-login");
 
   for (const element of elements_to_show) {
-    element.style.display = "block";
+    element.hidden = false;
   }
   const login_modal = document.getElementById("login-modal");
   login_modal.style.display = "none";
@@ -42,10 +42,12 @@ function do_login() {
 function do_logout() {
   const login_buttons = document.getElementsByClassName("login-container");
   for (const button of login_buttons) {
-    button.style.display = "flex";
+    button.hidden = false;
   }
-  const shoutbox_ui = document.getElementById("shoutbox-ui");
-  shoutbox_ui.style.display = "none";
+  const elements_to_hide = document.getElementsByClassName("show-on-login");
+  for (const element of elements_to_hide) {
+    element.hidden = true;
+  }
 }
 
 async function try_login(token) {
@@ -321,7 +323,7 @@ function set_up_login_modals() {
     const result = await register_display_name(display_name_trimmed);
     if ("error" in result) {
       const error = result["error"];
-      if (error === "NAME_TAKEN") {
+      if (error === "USER_TAKEN") {
         const modal = document.getElementById("login-modal");
         modal.style.display = "none";
         const token_login_modal = document.getElementById("token-login-modal");

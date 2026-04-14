@@ -58,6 +58,8 @@ pub enum RequestError {
     InvalidPost,
     #[error("Internal error")]
     DbError(#[from] DbError),
+    #[error("Internal error")]
+    InternalError,
     #[error("Invalid endpoint")]
     InvalidEndpoint,
     #[error("Invalid method")]
@@ -68,7 +70,6 @@ pub enum RequestError {
     InvalidId,
     #[error("Not allowed")]
     NotAllowed,
-
     #[error("Error parsing provided color:")]
     ColorParsingError(#[from] ColorParseError),
 }
@@ -82,7 +83,7 @@ impl RequestError {
             Self::Utf8Error(_) => StatusCode::BAD_REQUEST,
             Self::JsonFieldError(_) => StatusCode::BAD_REQUEST,
             Self::EmptyFieldError(_) => StatusCode::BAD_REQUEST,
-            Self::UsernameTaken => StatusCode::CONFLICT,
+            Self::UsernameTaken => StatusCode::OK,
             Self::InvalidPost => StatusCode::NOT_FOUND,
             Self::DbError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidEndpoint => StatusCode::NOT_FOUND,
@@ -91,6 +92,7 @@ impl RequestError {
             Self::InvalidId => StatusCode::BAD_REQUEST,
             Self::NotAllowed => StatusCode::FORBIDDEN,
             Self::ColorParsingError(_) => StatusCode::BAD_REQUEST,
+            Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 

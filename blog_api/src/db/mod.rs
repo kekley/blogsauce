@@ -6,7 +6,7 @@ use std::{path::Path, str};
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rand::Rng;
-use thiserror::Error;
+use tracing::{Level, event};
 
 use crate::models::ip::TruncatedIp;
 use crate::models::joins::comments::JoinedComment;
@@ -25,22 +25,26 @@ pub struct CommentDb {
     conn: PooledConnection<SqliteConnectionManager>,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum DbError {
-    #[error("Internal Error (whoopsie)")]
-    InternalError,
-    #[error("No Results From Query")]
+    SqlError(rusqlite::Error),
     NoResults,
-    #[error("Db Insertion violated unique constraints")]
     NonUniqueError,
 }
 
 impl From<rusqlite::Error> for DbError {
     fn from(value: rusqlite::Error) -> Self {
-        match value {
-            rusqlite::Error::QueryReturnedNoRows => Self::NoResults,
-            _ => Self::InternalError,
-        }
+        event!(Level::ERROR, "SQL Error: {value}");
+
+        DbError::SqlError(value)
+    }
+}
+
+impl std::error::Error for DbError {}
+
+impl std::fmt::Display for DbError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{self:?}"))
     }
 }
 
@@ -176,12 +180,12 @@ impl CommentDb {
         statement
             .execute((display_name.trim(), token.trim(), color, ip))
             .map_err(|err| {
-                let err = DbError::from(err);
-
-                if let DbError::NonUniqueError = err {
+                if let Some(code) = err.sqlite_error_code()
+                    && dbg!(code) == rusqlite::ErrorCode::ConstraintViolation
+                {
                     RequestError::UsernameTaken
                 } else {
-                    err.into()
+                    RequestError::from(DbError::from(err))
                 }
             })?;
 
