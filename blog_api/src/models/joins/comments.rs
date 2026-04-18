@@ -1,5 +1,3 @@
-use jiff::civil::DateTime;
-
 use crate::models::{
     comment::CommentId,
     user::{Color, UserId},
@@ -11,7 +9,7 @@ pub struct JoinedComment {
     user_id: UserId,
     content: String,
     edited: bool,
-    updated_on: DateTime,
+    updated_on: String,
     user_display_name: String,
     user_color: Color,
     user_banned: bool,
@@ -42,7 +40,7 @@ impl JoinedComment {
     pub fn was_edited(&self) -> bool {
         self.edited
     }
-    pub fn updated_on(&self) -> &DateTime {
+    pub fn updated_on(&self) -> &str {
         &self.updated_on
     }
     pub fn get_user_display_name(&self) -> &str {

@@ -1,10 +1,11 @@
 pub mod endpoints;
 pub mod util;
 
-use crate::db::CommentDb;
-use crate::db::DbError;
+use crate::db::sqlite::CommentDb;
+use crate::db::sqlite::DbError;
 use crate::json::HEAPLESS_STRING_LEN;
-use crate::models::shout::ShoutEvent;
+use crate::json::JsonFieldError;
+use crate::models::shout::Shout;
 use crate::models::user::ColorParseError;
 use crate::server::endpoints::comments::delete_comment_endpoint_post;
 use crate::server::endpoints::comments::edit_comment_endpoint_post;
@@ -27,77 +28,61 @@ use http_body_util::combinators::BoxBody;
 use hyper::Response;
 use hyper::StatusCode;
 use json::object;
+use quick_error::quick_error;
 use std::convert::Infallible;
 use std::net::IpAddr;
 use std::sync::Arc;
-use thiserror::Error;
-use tracing::Level;
-use tracing::event;
 
 use hyper::Request;
 
 pub type RequestResult = Result<Response<BoxBody<Bytes, Infallible>>, RequestError>;
 
-#[derive(Debug, Error)]
-pub enum RequestError {
-    #[error("HTTP Error")]
-    HttpError(#[from] hyper::http::Error),
-    #[error("Error parsing request JSON")]
-    JsonError(#[from] json::Error),
-    #[error("Error Streaming HTTP Body")]
-    BodyError(#[from] hyper::Error),
-    #[error("Error Parsing a string in the request")]
-    Utf8Error(#[from] std::str::Utf8Error),
-    #[error("{0}")]
-    JsonFieldError(#[from] crate::json::JsonFieldError),
-    #[error("{0}")]
-    EmptyFieldError(heapless::String<HEAPLESS_STRING_LEN>),
-    #[error("USER_TAKEN")]
-    UsernameTaken,
-    #[error("No post matched the provided 'post' field")]
-    InvalidPost,
-    #[error("Internal error")]
-    DbError(#[from] DbError),
-    #[error("Internal error")]
-    InternalError,
-    #[error("Invalid endpoint")]
-    InvalidEndpoint,
-    #[error("Invalid method")]
-    InvalidMethod,
-    #[error("Invalid token")]
-    InvalidToken,
-    #[error("Invalid ID")]
-    InvalidId,
-    #[error("Not allowed")]
-    NotAllowed,
-    #[error("Error parsing provided color:")]
-    ColorParsingError(#[from] ColorParseError),
+quick_error! {
+    #[derive(Debug)]
+    pub enum RequestError {
+        Http(err: hyper::http::Error){from()}
+        Json(err: json::Error) {from()}
+        Hyper(err: hyper::Error) {from()}
+        Utf8(err: std::str::Utf8Error) {from()}
+        JsonField(err: JsonFieldError) {from()}
+        EmptyField(field: heapless::String<HEAPLESS_STRING_LEN>) {from()}
+        UsernameTaken
+        InvalidPost
+        Db(err: DbError) {from()}
+        Internal
+        InvalidEndpoint
+        InvalidMethod
+        InvalidToken
+        InvalidId
+        NotAllowed
+        ColorParsingError(err: ColorParseError) {from()}
+    }
 }
 
 impl RequestError {
     pub fn status_code(&self) -> StatusCode {
         match self {
-            Self::HttpError(_) => StatusCode::BAD_REQUEST,
-            Self::JsonError(_) => StatusCode::BAD_REQUEST,
-            Self::BodyError(_) => StatusCode::BAD_REQUEST,
-            Self::Utf8Error(_) => StatusCode::BAD_REQUEST,
-            Self::JsonFieldError(_) => StatusCode::BAD_REQUEST,
-            Self::EmptyFieldError(_) => StatusCode::BAD_REQUEST,
+            Self::Http(_) => StatusCode::BAD_REQUEST,
+            Self::Json(_) => StatusCode::BAD_REQUEST,
+            Self::Hyper(_) => StatusCode::BAD_REQUEST,
+            Self::Utf8(_) => StatusCode::BAD_REQUEST,
+            Self::JsonField(_) => StatusCode::BAD_REQUEST,
+            Self::EmptyField(_) => StatusCode::BAD_REQUEST,
             Self::UsernameTaken => StatusCode::OK,
             Self::InvalidPost => StatusCode::NOT_FOUND,
-            Self::DbError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Db(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::InvalidEndpoint => StatusCode::NOT_FOUND,
             Self::InvalidMethod => StatusCode::METHOD_NOT_ALLOWED,
             Self::InvalidToken => StatusCode::UNAUTHORIZED,
             Self::InvalidId => StatusCode::BAD_REQUEST,
             Self::NotAllowed => StatusCode::FORBIDDEN,
             Self::ColorParsingError(_) => StatusCode::BAD_REQUEST,
-            Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     pub fn into_error_string(self) -> String {
-        format!("{self}")
+        todo!()
     }
 }
 
@@ -105,7 +90,7 @@ pub async fn handle_request(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<ShoutEvent>>,
+    shout_events: Sender<Arc<Shout>>,
 ) -> RequestResult {
     let path = request.uri().path().to_owned();
     let result = match request.uri().path() {
@@ -129,10 +114,7 @@ pub async fn handle_request(
     match result {
         Ok(r) => Ok(r),
         Err(err) => {
-            event!(
-                Level::ERROR,
-                "Error handling {addr}'s request on endpoint {path}: {err}",
-            );
+            eprintln!("Error handling {addr}'s request on endpoint {path}: {err}");
             let status_code = err.status_code();
             let error_string = err.into_error_string();
 

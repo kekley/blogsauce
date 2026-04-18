@@ -1,4 +1,3 @@
-use jiff::civil::DateTime;
 use json::JsonValue;
 use rusqlite::{
     ToSql,
@@ -44,7 +43,7 @@ pub struct Comment {
     user_id: UserId,
     content: String,
     edited: bool,
-    posted_on: DateTime,
+    posted_on: String,
 }
 
 impl Comment {
@@ -52,7 +51,7 @@ impl Comment {
         &self.content
     }
 
-    pub fn get_datetime(&self) -> &DateTime {
+    pub fn get_datetime(&self) -> &String {
         &self.posted_on
     }
     pub fn get_post_id(&self) -> PostId {

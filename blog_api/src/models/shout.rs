@@ -1,4 +1,3 @@
-use jiff::civil::DateTime;
 use json::JsonValue;
 use rusqlite::{
     ToSql,
@@ -10,6 +9,17 @@ use crate::models::user::UserId;
 #[derive(Debug, Clone, Copy)]
 pub struct ShoutId {
     inner: i64,
+}
+impl ShoutId {
+    pub(crate) fn from_sqlite_row(row: &rusqlite::Row<'_>) -> Result<Self, rusqlite::Error> {
+        todo!()
+    }
+}
+
+impl From<i64> for ShoutId {
+    fn from(value: i64) -> Self {
+        ShoutId { inner: value }
+    }
 }
 
 impl From<ShoutId> for JsonValue {
@@ -43,14 +53,7 @@ pub struct Shout {
     user_id: UserId,
     content: String,
     edited: bool,
-    posted_on: DateTime,
-}
-#[derive(Debug)]
-pub struct ShoutEvent {
-    pub display_name: String,
-    pub content: String,
-    pub user_color: String,
-    pub user_id: UserId,
+    posted_on: String,
 }
 
 impl Shout {
@@ -58,7 +61,7 @@ impl Shout {
         &self.content
     }
 
-    pub fn get_datetime(&self) -> &DateTime {
+    pub fn get_datetime(&self) -> &str {
         &self.posted_on
     }
 

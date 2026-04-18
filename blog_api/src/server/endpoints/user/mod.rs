@@ -2,11 +2,10 @@ use std::{fmt::Write as _, net::IpAddr};
 
 use hyper::{Method, Request, StatusCode};
 use json::object;
-use rand::{TryRngCore as _, rngs::OsRng};
-use tracing::{Level, event};
+use rand::{TryRng as _, rngs::SysRng};
 
 use crate::{
-    db::CommentDb,
+    db::sqlite::CommentDb,
     json::extract_json_field,
     models::{ip::TruncatedIp, user::Color},
     server::{
@@ -81,15 +80,15 @@ pub(crate) async fn register_name_endpoint_post(
             let desired_name: &str = extract_json_field(DISPLAY_NAME_FIELD, &json)?;
 
             if desired_name.is_empty() {
-                return Err(crate::server::RequestError::EmptyFieldError(
+                return Err(crate::server::RequestError::EmptyField(
                     DISPLAY_NAME_FIELD.try_into().unwrap(),
                 ));
             }
 
             let mut buf = [0u8; 16];
-            OsRng.try_fill_bytes(&mut buf).map_err(|err| {
-                event!(Level::ERROR, "OS Error: {err}");
-                RequestError::InternalError
+            SysRng.try_fill_bytes(&mut buf).map_err(|err| {
+                eprintln!("OS Error: {err}");
+                RequestError::Internal
             })?;
 
             let mut token = heapless::String::<32>::new();

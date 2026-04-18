@@ -1,5 +1,6 @@
+use std::num::ParseIntError;
+
 use rusqlite::{ToSql, types::FromSql};
-use thiserror::Error;
 
 use crate::models::ip::TruncatedIp;
 
@@ -58,13 +59,16 @@ impl User {
 #[derive(Copy, Clone)]
 pub struct Color(u32);
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ColorParseError {
-    #[error("String is missing the # prefix")]
     MissingPrefix,
+    IntParseError(ParseIntError),
+}
 
-    #[error("Parsing of the integer value failed: {0}")]
-    IntParseError(#[from] std::num::ParseIntError),
+impl From<ParseIntError> for ColorParseError {
+    fn from(value: ParseIntError) -> Self {
+        todo!()
+    }
 }
 
 impl Color {

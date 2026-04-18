@@ -1,3 +1,5 @@
+use crate::db::sqlite::CommentDb;
+use crate::db::sqlite::DbError;
 use crate::json::JsonFieldError;
 use crate::server::RequestError;
 use crate::server::endpoints::COMMENT_ID_FIELD_NAME;
@@ -11,7 +13,6 @@ use hyper::{Method, Request, StatusCode};
 use json::object;
 
 use crate::{
-    db::{CommentDb, DbError},
     json::extract_json_field,
     server::{
         RequestResult,
@@ -30,33 +31,26 @@ pub(crate) async fn post_comment_endpoint_post(
         Method::OPTIONS => Ok(options_response()),
         Method::POST => {
             let json = request_to_json(request).await?;
-            println!("got json!");
 
             let token: &str = extract_json_field(TOKEN_FIELD_NAME, &json)?;
 
-            println!("got token!");
             let user = db.get_user_from_token(token)?;
-            println!("got user!");
 
             let post_ident: &str = extract_json_field(POST_IDENT_FIELD_NAME, &json)?;
-            println!("got post ident!");
 
             if post_ident.is_empty() {
-                return Err(crate::server::RequestError::EmptyFieldError(
+                return Err(crate::server::RequestError::EmptyField(
                     POST_IDENT_FIELD_NAME.try_into().unwrap(),
                 ));
             }
-            println!("post ident not empty!");
 
             let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
-            println!("got content!");
 
             if content.is_empty() {
-                return Err(crate::server::RequestError::EmptyFieldError(
+                return Err(crate::server::RequestError::EmptyField(
                     CONTENT_FIELD_NAME.try_into().unwrap(),
                 ));
             }
-            println!("content not empty!");
 
             let post = match db.get_post_with_ident(post_ident) {
                 Ok(post) => post,
@@ -67,10 +61,8 @@ pub(crate) async fn post_comment_endpoint_post(
                     return Err(err.into());
                 }
             };
-            println!("got post");
 
             db.add_comment(post.get_id(), user.get_id(), content)?;
-            println!("made comment");
 
             Ok(json_to_response(object! {}, StatusCode::OK))
         }
@@ -124,7 +116,7 @@ pub(crate) async fn edit_comment_endpoint_post(
             let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
 
             if content.is_empty() {
-                return Err(crate::server::RequestError::EmptyFieldError(
+                return Err(crate::server::RequestError::EmptyField(
                     COMMENT_ID_FIELD_NAME.try_into().unwrap(),
                 ));
             }
@@ -155,7 +147,7 @@ pub(crate) async fn get_comments_endpoint_post(
             let json = request_to_json(request).await?;
 
             let json::JsonValue::Array(posts) = &json[POST_GET_IDENTS_FIELD_NAME] else {
-                return Err(RequestError::JsonFieldError(JsonFieldError::MissingField(
+                return Err(RequestError::JsonField(JsonFieldError::MissingField(
                     POST_GET_IDENTS_FIELD_NAME.try_into().unwrap(),
                 )));
             };

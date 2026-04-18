@@ -1,7 +1,11 @@
+use std::fmt::Write;
+
 use rusqlite::{
     Row, ToSql,
     types::{FromSql, FromSqlError},
 };
+
+pub type PostIdentifier = heapless::String<255, u8>;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PostId {
@@ -26,14 +30,19 @@ impl FromSql for PostId {
 /// A unique ID for a post alongside a unique identifier (usually the title)
 pub struct Post {
     id: PostId,
-    post_ident: String,
+    post_ident: PostIdentifier,
 }
 
 impl Post {
-    pub fn from_row(row: &Row<'_>) -> Result<Self, rusqlite::Error> {
+    pub fn from_sqlite_row(row: &Row<'_>) -> Result<Self, rusqlite::Error> {
+        let ident_string = row.get::<usize, String>(1)?;
+        let mut ident_inline = PostIdentifier::new();
+        ident_inline
+            .write_str(ident_string.as_str())
+            .expect("Post Identifier String was too long");
         Ok(Self {
             id: row.get(0)?,
-            post_ident: row.get::<usize, String>(1)?,
+            post_ident: ident_inline,
         })
     }
     pub fn get_id(&self) -> PostId {

@@ -1,21 +1,14 @@
-use areq_smol::ClientExt as _;
-use areq_smol::body::BodyExt as _;
-use areq_smol::http1::Http1;
-use areq_smol::smol::{Connect as _, Handle as _};
-use areq_smol::tls::Tls;
 use async_broadcast::broadcast;
 use async_channel::unbounded;
-use blog_api::db::CommentDb;
+use blog_api::db::sqlite::CommentDb;
 use blog_api::server::endpoints::splashes::splash_file_watcher;
 use blog_api::server::handle_request;
-use clap::Parser;
 use easy_parallel::Parallel;
 use hyper::Request;
 use hyper::body::Incoming;
 use hyper::server::conn::http1::Builder;
 use hyper::service::service_fn;
 use json::JsonValue;
-use mimalloc::MiMalloc;
 use smol::net::TcpListener;
 use smol::{future, spawn};
 use smol_hyper::rt::SmolTimer;
@@ -23,75 +16,70 @@ use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr as _;
 use std::time::Duration;
-use tracing::{Level, event};
 
-#[global_allocator]
-static GLOBAL: MiMalloc = MiMalloc;
-
-#[derive(Debug, Parser)]
-pub struct Settings {
-    #[arg(
-        help = "The path where the database resides or will be created",
-        short = 'd',
-        long,
-        default_value = "./comments.sqlite"
-    )]
-    database_path: PathBuf,
-    #[arg(
-        help = "The path where the tab title splashes will be read from",
-        short = 's',
-        long,
-        default_value = "../splashes/splashes.txt"
-    )]
-    splashes_path: PathBuf,
-    #[arg(
-        help = "The port the server will listen on",
-        short = 'p',
-        long,
-        default_value_t = 3000
-    )]
-    listen_port: u16,
-    #[arg(
-        help = "The url where the list of posts will be fetched from. If empty, the post list will not be updated automatically",
-        short = 'j',
-        long,
-        default_value = ""
-    )]
-    json_posts_url: String,
-    #[arg(
-        help = "The interval at which the post list is updated from the url",
-        short = 'u',
-        long,
-        default_value_t = 300
-    )]
-    post_list_update_interval_secs: u32,
-
-    #[arg(
-        help = "The window for rate limiting the getUser endpoint",
-        short = 'r',
-        long,
-        default_value = "300"
-    )]
-    rate_limit_window_secs: u32,
-    #[arg(
-        help = "The interval at which rate limit entries are cleaned up",
-        short = 'c',
-        long,
-        default_value = "300"
-    )]
-    rate_limit_cleanup_interval_secs: u32,
-    #[arg(
-        help = "The number of allowed hits to the getUser endpoint before rate limiting",
-        short = 'l',
-        long,
-        default_value = "10"
-    )]
-    rate_limit: u32,
-}
+//#[derive(Debug, Parser)]
+//pub struct Settings {
+//    #[arg(
+//        help = "The path where the database resides or will be created",
+//        short = 'd',
+//        long,
+//        default_value = "./comments.sqlite"
+//    )]
+//    database_path: PathBuf,
+//    #[arg(
+//        help = "The path where the tab title splashes will be read from",
+//        short = 's',
+//        long,
+//        default_value = "../splashes/splashes.txt"
+//    )]
+//    splashes_path: PathBuf,
+//    #[arg(
+//        help = "The port the server will listen on",
+//        short = 'p',
+//        long,
+//        default_value_t = 3000
+//    )]
+//    listen_port: u16,
+//    #[arg(
+//        help = "The url where the list of posts will be fetched from. If empty, the post list will not be updated automatically",
+//        short = 'j',
+//        long,
+//        default_value = ""
+//    )]
+//    json_posts_url: String,
+//    #[arg(
+//        help = "The interval at which the post list is updated from the url",
+//        short = 'u',
+//        long,
+//        default_value_t = 300
+//    )]
+//    post_list_update_interval_secs: u32,
+//
+//    #[arg(
+//        help = "The window for rate limiting the getUser endpoint",
+//        short = 'r',
+//        long,
+//        default_value = "300"
+//    )]
+//    rate_limit_window_secs: u32,
+//    #[arg(
+//        help = "The interval at which rate limit entries are cleaned up",
+//        short = 'c',
+//        long,
+//        default_value = "300"
+//    )]
+//    rate_limit_cleanup_interval_secs: u32,
+//    #[arg(
+//        help = "The number of allowed hits to the getUser endpoint before rate limiting",
+//        short = 'l',
+//        long,
+//        default_value = "10"
+//    )]
+//    rate_limit: u32,
+//}
 
 fn main() {
-    tracing_subscriber::fmt::init();
-    event!(Level::INFO, "Started Server");
+    eprintln!("Starting Server!");
 
     let ex = smol::Executor::new();
     let (shutdown_signal, shutdown) = unbounded::<()>();
@@ -103,7 +91,7 @@ fn main() {
                 match server().await {
                     Ok(_) => {}
                     Err(err) => {
-                        event!(Level::ERROR, "Server exited with error:{err}");
+                        eprintln!("Server exited with error:{err}");
                     }
                 }
                 drop(shutdown_signal);
@@ -112,36 +100,24 @@ fn main() {
 }
 
 async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let settings = Settings::parse();
-
-    event!(Level::INFO, "Parsed settings:{settings:?}");
-
-    let Settings {
-        database_path,
-        listen_port,
-        json_posts_url,
-        post_list_update_interval_secs,
-        rate_limit_window_secs: _,
-        rate_limit_cleanup_interval_secs: _,
-        rate_limit: _,
-        splashes_path,
-    } = settings;
+    let database_path: PathBuf = todo!();
+    let listen_port = todo!();
+    let json_posts_url: String = todo!();
+    let post_list_update_interval_secs = todo!();
+    let splashes_path: PathBuf = todo!();
 
     let addr: SocketAddr = ([0, 0, 0, 0], listen_port).into();
 
     let db_connection_pool = CommentDb::create_db(&database_path);
 
-    event!(Level::INFO, "Connected to DB");
+    eprintln!("Connected to DB");
 
     let listener = TcpListener::bind(addr).await?;
 
-    event!(Level::INFO, "Listening on {addr}");
+    eprintln!("Listening on {addr}");
 
     if !json_posts_url.is_empty() {
-        event!(
-            Level::INFO,
-            "Looking for post list json at: {json_posts_url}"
-        );
+        eprintln!("Looking for post list json at: {json_posts_url}");
         spawn(post_list_updater(
             post_list_update_interval_secs,
             json_posts_url,
@@ -150,7 +126,7 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .detach();
     }
     let _watcher = if !splashes_path.to_string_lossy().is_empty() {
-        event!(Level::INFO, "Watching splashes file at {splashes_path:?}");
+        eprintln!("Watching splashes file at {splashes_path:?}");
 
         Some(splash_file_watcher(splashes_path))
     } else {
@@ -189,8 +165,7 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             ip_addr
                         };
 
-                        event!(
-                            Level::INFO,
+                        eprintln!(
                             "Received connection from: {ip_addr} for {}",
                             request.uri().path()
                         );
@@ -200,7 +175,7 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 )
                 .await
             {
-                event!(Level::ERROR, "Error serving connection: {err}");
+                eprintln!("Error serving connection: {err}");
             }
         })
         .detach();
@@ -216,7 +191,7 @@ async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb)
             && let JsonValue::Array(posts) = &json["posts"]
         {
             let posts_str = posts.iter().flat_map(|v| v.as_str());
-            event!(Level::INFO, "Updated post list");
+            eprintln!("Updated post list");
 
             db.update_posts(posts_str);
         }
@@ -224,22 +199,6 @@ async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb)
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-enum UrlFetchError {
-    #[error("Invalid URI: {0}")]
-    InvalidUri(#[from] areq_smol::http::uri::InvalidUri),
-    #[error("{0}")]
-    AreqError(#[from] areq_smol::Error),
-    #[error("{0}")]
-    IoError(#[from] std::io::Error),
-}
-
-async fn fetch_url(url: &str) -> Result<String, UrlFetchError> {
-    let uri = areq_smol::http::Uri::from_str(url)?;
-    let tls = Tls::with_webpki_roots(Http1::default());
-    Ok(tls
-        .connect(&uri)
-        .await?
-        .handle(async move |client| client.get(uri, ()).await?.text().await)
-        .await?)
+async fn fetch_url(url: &str) -> Result<String, ()> {
+    todo!()
 }

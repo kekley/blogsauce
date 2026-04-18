@@ -4,7 +4,7 @@ use hyper::{Method, Request, StatusCode};
 use json::object;
 
 use crate::{
-    db::CommentDb,
+    db::sqlite::CommentDb,
     json::extract_json_field,
     server::{
         RequestError, RequestResult,
@@ -28,7 +28,7 @@ pub(crate) async fn post_star_endpoint_post(
             let post_ident: &str = extract_json_field(POST_IDENT_FIELD_NAME, &json)?;
 
             if post_ident.is_empty() {
-                return Err(RequestError::EmptyFieldError(
+                return Err(RequestError::EmptyField(
                     POST_IDENT_FIELD_NAME.try_into().unwrap(),
                 ));
             }

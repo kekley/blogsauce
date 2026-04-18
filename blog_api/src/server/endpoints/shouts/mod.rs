@@ -1,8 +1,8 @@
 use std::{convert::Infallible, net::IpAddr, sync::Arc, time::Duration};
 
 use async_broadcast::Sender;
+use async_stream_lite::async_stream;
 use bytes::Bytes;
-use futures::FutureExt as _;
 use http_body_util::{BodyExt, StreamBody, combinators::BoxBody};
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -13,9 +13,9 @@ use json::object;
 use smol::Timer;
 
 use crate::{
-    db::CommentDb,
+    db::sqlite::CommentDb,
     json::extract_json_field,
-    models::{shout::ShoutEvent, user::Color},
+    models::{shout::Shout, user::Color},
     server::{
         RequestError, RequestResult,
         endpoints::{CONTENT_FIELD_NAME, SHOUT_ID_FIELD_NAME, TOKEN_FIELD_NAME},
@@ -27,7 +27,7 @@ pub(crate) async fn post_shout_endpoint_post(
     request: Request<hyper::body::Incoming>,
     _addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<ShoutEvent>>,
+    shout_events: Sender<Arc<Shout>>,
 ) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
@@ -39,30 +39,23 @@ pub(crate) async fn post_shout_endpoint_post(
 
             let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
             if content.is_empty() {
-                return Err(RequestError::EmptyFieldError(
+                return Err(RequestError::EmptyField(
                     CONTENT_FIELD_NAME.try_into().unwrap(),
                 ));
             }
 
-            let shout_result = match db.add_shout(user.get_id(), content) {
-                Ok(_) => Ok(json_to_response(response_object, StatusCode::OK)),
+            match db.add_shout(user.get_id(), content) {
+                Ok(shout_id) => {
+                    if let Ok(shout) = db.get_shout_from_id(shout_id) {
+                        let _ = shout_events.broadcast(Arc::new(shout)).await;
+                    }
+                    Ok(json_to_response(response_object, StatusCode::OK))
+                }
                 Err(_err) => {
                     response_object["error"] = "Error posting shout".into();
                     Ok(json_to_response(response_object, StatusCode::BAD_REQUEST))
                 }
-            };
-            if shout_result.is_ok() {
-                shout_events
-                    .broadcast(Arc::new(ShoutEvent {
-                        display_name: user.get_display_name().to_string(),
-                        content: ammonia::clean(content),
-                        user_color: user.get_color().to_string(),
-                        user_id: user.get_id(),
-                    }))
-                    .await
-                    .unwrap();
             }
-            shout_result
         }
         _ => Err(RequestError::InvalidMethod),
     }
@@ -81,7 +74,7 @@ pub(crate) async fn edit_shout_endpoint_post(
             let user = db.get_user_from_token(token)?;
             let content: &str = extract_json_field(CONTENT_FIELD_NAME, &json)?;
             if content.is_empty() {
-                return Err(RequestError::EmptyFieldError(
+                return Err(RequestError::EmptyField(
                     CONTENT_FIELD_NAME.try_into().unwrap(),
                 ));
             }
@@ -182,11 +175,16 @@ pub(crate) async fn get_shouts_endpoint_post(
     }
 }
 
+enum Event<T> {
+    Msg(Result<T, async_broadcast::RecvError>),
+    KeepAlive,
+}
+
 pub(crate) async fn subscribe_shouts_endpoint_get(
     request: Request<hyper::body::Incoming>,
     _addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<ShoutEvent>>,
+    shout_events: Sender<Arc<Shout>>,
 ) -> Result<Response<BoxBody<Bytes, Infallible>>, RequestError> {
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -200,41 +198,42 @@ pub(crate) async fn subscribe_shouts_endpoint_get(
                 .and_then(|token| db.get_user_from_token(token).ok());
 
             let mut rx = shout_events.new_receiver();
-
-            let stream = async_stream::stream! {
+            let stream = async_stream(|yielder| async move {
                 loop {
-                    futures::select! {
-                        msg = rx.recv().fuse() => {
-                            match msg {
-                                Ok(shout_event) => {
-                                    let json = object!{
-                                        user_color: shout_event.user_color.as_str(),
-                                        display_name: shout_event.display_name.as_str(),
-                                        content: shout_event.content.as_str(),
-                                        editable: user_opt.as_ref().is_some_and(|user|user.get_id()==shout_event.user_id)
-                                    };
+                    let event = smol::future::or(async { Event::Msg(rx.recv().await) }, async {
+                        Timer::after(Duration::from_secs(15)).await;
+                        Event::KeepAlive
+                    })
+                    .await;
+                    match event {
+                        Event::Msg(Ok(shout)) => {
+                            let json = todo!();
 
-                                    yield Ok::<Frame<Bytes>, Infallible>(
-                                        Frame::data(Bytes::from(format!("data: {json}\n\n")))
-                                    );
-                                }
-                                Err(async_broadcast::RecvError::Overflowed(_)) => {
-                                    continue;
-                                }
-                                Err(async_broadcast::RecvError::Closed) => {
-                                    break;
-                                }
-                            }
+                            yielder
+                                .r#yield(Ok::<Frame<Bytes>, Infallible>(Frame::data(Bytes::from(
+                                    format!("data: {json}\n\n"),
+                                ))))
+                                .await;
                         }
 
-                        _ = Timer::after(Duration::from_secs(15)).fuse() => {
-                            yield Ok::<Frame<Bytes>, Infallible>(
-                                Frame::data(Bytes::from(": keep-alive\n\n"))
-                            );
+                        Event::Msg(Err(async_broadcast::RecvError::Overflowed(_))) => {
+                            continue;
+                        }
+
+                        Event::Msg(Err(async_broadcast::RecvError::Closed)) => {
+                            break;
+                        }
+
+                        Event::KeepAlive => {
+                            yielder
+                                .r#yield(Ok::<Frame<Bytes>, Infallible>(Frame::data(
+                                    Bytes::from_static(b": keep-alive\n\n"),
+                                )))
+                                .await;
                         }
                     }
                 }
-            };
+            });
 
             let boxed = StreamBody::new(stream).boxed();
 

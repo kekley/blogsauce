@@ -1,10 +1,8 @@
 pub const HEAPLESS_STRING_LEN: usize = 24;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum JsonFieldError {
-    #[error("Missing field: {0}")]
     MissingField(heapless::String<HEAPLESS_STRING_LEN>),
-    #[error("Incorrect type on field `{field}`: expected {expected}, got {got}")]
     IncorrectType {
         field: heapless::String<HEAPLESS_STRING_LEN>,
         expected: heapless::String<HEAPLESS_STRING_LEN>,

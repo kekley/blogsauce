@@ -1,8 +1,8 @@
 //Users
 pub const CREATE_USER_TABLE: &str = "CREATE TABLE IF NOT EXISTS users(
         id INTEGER NOT NULL PRIMARY KEY,
-        display_name TEXT NOT NULL,
-        token TEXT NOT NULL UNIQUE,
+        display_name VARCHAR(255) NOT NULL,
+        token VARCHAR(32) NOT NULL UNIQUE,
         color INTEGER NOT NULL DEFAULT 0,
         banned INTEGER NOT NULL DEFAULT 0,
         associated_ip INTEGER NOT NULL,
@@ -19,7 +19,7 @@ pub const UPDATE_USER_COLOR: &str = "UPDATE users SET color=? WHERE (id=?)";
 //Post SQL
 pub const CREATE_POST_TABLE: &str = "CREATE TABLE IF NOT EXISTS posts (
         id INTEGER NOT NULL PRIMARY KEY,
-        identifier TEXT NOT NULL UNIQUE
+        identifier VARCHAR(255) NOT NULL UNIQUE
     )";
 pub const GET_POST_WITH_IDENT: &str = "SELECT * FROM posts WHERE identifier=?";
 pub const INSERT_POST_WITH_IDENT: &str =
@@ -42,7 +42,7 @@ pub const CREATE_COMMENT_TABLE: &str = "CREATE TABLE IF NOT EXISTS comments (
         id INTEGER NOT NULL PRIMARY KEY,
         posted_under INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
-        content TEXT NOT NULL,
+        content VARCHAR(64000) NOT NULL,
         edited INTEGER NOT NULL DEFAULT 0,
         created DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (posted_under) REFERENCES posts(id)
@@ -65,14 +65,15 @@ pub const GET_COMMENT_WITH_ID: &str = "SELECT * FROM comments WHERE (id=?)";
 pub const CREATE_SHOUTS_TABLE: &str = "CREATE TABLE IF NOT EXISTS shouts (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        content TEXT NOT NULL,
+        content VARCHAR(4000) NOT NULL,
         edited INTEGER NOT NULL DEFAULT 0,
         created DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )";
 pub const GET_SHOUT_WITH_ID: &str = "SELECT * FROM shouts WHERE (id=?)";
 pub const GET_JOINED_SHOUTS: &str = "SELECT shouts.id, shouts.user_id, shouts.content, users.display_name, users.color, users.banned FROM shouts INNER JOIN users ON users.id = shouts.user_id";
-pub const INSERT_SHOUT: &str = "INSERT INTO shouts (id,user_id,content) VALUES (NULL,?,?)";
+pub const INSERT_SHOUT_RETURNING_ID: &str =
+    "INSERT INTO shouts (id,user_id,content) VALUES (NULL,?,?) RETURNING id";
 pub const UPDATE_SHOUT: &str =
     "UPDATE shouts SET content=?,edited=1,created=CURRENT_TIMESTAMP WHERE id=?";
 pub const DELETE_SHOUT: &str = "DELETE FROM shouts WHERE id=?";
