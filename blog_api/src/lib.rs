@@ -1,3 +1,4 @@
+pub mod args;
 pub mod db;
 pub mod json;
 pub mod models;

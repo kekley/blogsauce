@@ -170,11 +170,12 @@ impl CommentDb {
         token: &str,
         ip: TruncatedIp,
     ) -> Result<(), RequestError> {
+        let display_name = sanitize_name(display_name);
         let mut statement = self.conn.prepare(INSERT_USER).map_err(DbError::from)?;
         let mut rng = rand::rng();
         let color: u32 = rng.random();
         statement
-            .execute((display_name.trim(), token.trim(), color, ip))
+            .execute((display_name.as_str(), token.trim(), color, ip))
             .map_err(|err| {
                 if let Some(code) = err.sqlite_error_code()
                     && dbg!(code) == rusqlite::ErrorCode::ConstraintViolation

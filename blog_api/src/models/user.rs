@@ -1,5 +1,6 @@
 use std::num::ParseIntError;
 
+use quick_error::quick_error;
 use rusqlite::{ToSql, types::FromSql};
 
 use crate::models::ip::TruncatedIp;
@@ -59,16 +60,12 @@ impl User {
 #[derive(Copy, Clone)]
 pub struct Color(u32);
 
+quick_error! {
 #[derive(Debug)]
 pub enum ColorParseError {
-    MissingPrefix,
-    IntParseError(ParseIntError),
+    MissingPrefix
+    IntParseError(err: ParseIntError){from()}
 }
-
-impl From<ParseIntError> for ColorParseError {
-    fn from(value: ParseIntError) -> Self {
-        todo!()
-    }
 }
 
 impl Color {
