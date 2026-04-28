@@ -15,7 +15,7 @@ use smol::Timer;
 use crate::{
     db::sqlite::CommentDb,
     json::extract_json_field,
-    models::{shout::Shout, user::Color},
+    models::{joins::shouts::JoinedShout, user::Color},
     server::{
         RequestError, RequestResult,
         endpoints::{CONTENT_FIELD_NAME, SHOUT_ID_FIELD_NAME, TOKEN_FIELD_NAME},
@@ -27,7 +27,7 @@ pub(crate) async fn post_shout_endpoint_post(
     request: Request<hyper::body::Incoming>,
     _addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<Shout>>,
+    shout_events: Sender<Arc<JoinedShout>>,
 ) -> RequestResult {
     let mut response_object = object! {};
     match *request.method() {
@@ -46,7 +46,7 @@ pub(crate) async fn post_shout_endpoint_post(
 
             match db.add_shout(user.get_id(), content) {
                 Ok(shout_id) => {
-                    if let Ok(shout) = db.get_shout_from_id(shout_id) {
+                    if let Ok(shout) = db.get_joined_shout_by_id(shout_id) {
                         let _ = shout_events.broadcast(Arc::new(shout)).await;
                     }
                     Ok(json_to_response(response_object, StatusCode::OK))
@@ -80,7 +80,7 @@ pub(crate) async fn edit_shout_endpoint_post(
             }
             let shout_id: i64 = extract_json_field(SHOUT_ID_FIELD_NAME, &json)?;
 
-            let shout = db.get_shout_from_id(shout_id)?;
+            let shout = db.get_shout_by_id(shout_id)?;
 
             if shout.get_user_id() != user.get_id() {
                 return Err(RequestError::NotAllowed);
@@ -108,7 +108,7 @@ pub(crate) async fn delete_shout_endpoint_post(
 
             let shout_id: i64 = extract_json_field(SHOUT_ID_FIELD_NAME, &json)?;
 
-            let shout = db.get_shout_from_id(shout_id)?;
+            let shout = db.get_shout_by_id(shout_id)?;
 
             if shout.get_user_id() != user.get_id() {
                 return Err(RequestError::NotAllowed);
@@ -184,7 +184,7 @@ pub(crate) async fn subscribe_shouts_endpoint_get(
     request: Request<hyper::body::Incoming>,
     _addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<Shout>>,
+    shout_events: Sender<Arc<JoinedShout>>,
 ) -> Result<Response<BoxBody<Bytes, Infallible>>, RequestError> {
     match *request.method() {
         Method::OPTIONS => Ok(options_response()),
@@ -207,7 +207,7 @@ pub(crate) async fn subscribe_shouts_endpoint_get(
                     .await;
                     match event {
                         Event::Msg(Ok(shout)) => {
-                            let json = todo!();
+                            let json = shout.to_json();
 
                             yielder
                                 .r#yield(Ok::<Frame<Bytes>, Infallible>(Frame::data(Bytes::from(

@@ -1,3 +1,5 @@
+use json::{JsonValue, object};
+
 use crate::models::{
     shout::ShoutId,
     user::{Color, UserId},
@@ -41,5 +43,14 @@ impl JoinedShout {
     }
     pub fn is_user_banned(&self) -> bool {
         self.user_banned
+    }
+    pub fn to_json(&self) -> JsonValue {
+        object! {
+            shout_id : self.shout_id.inner(),
+            user_id:self.user_id.inner(),
+            content:self.content.as_str(),
+            user_display_name:self.user_display_name.as_str(),
+            user_color:self.user_color.to_string()
+        }
     }
 }

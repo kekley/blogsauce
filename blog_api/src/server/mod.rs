@@ -5,7 +5,7 @@ use crate::db::sqlite::CommentDb;
 use crate::db::sqlite::DbError;
 use crate::json::HEAPLESS_STRING_LEN;
 use crate::json::JsonFieldError;
-use crate::models::shout::Shout;
+use crate::models::joins::shouts::JoinedShout;
 use crate::models::user::ColorParseError;
 use crate::server::endpoints::comments::delete_comment_endpoint_post;
 use crate::server::endpoints::comments::edit_comment_endpoint_post;
@@ -40,22 +40,61 @@ pub type RequestResult = Result<Response<BoxBody<Bytes, Infallible>>, RequestErr
 quick_error! {
     #[derive(Debug)]
     pub enum RequestError {
-        Http(err: hyper::http::Error){from()}
-        Json(err: json::Error) {from()}
-        Hyper(err: hyper::Error) {from()}
-        Utf8(err: std::str::Utf8Error) {from()}
-        JsonField(err: JsonFieldError) {from()}
-        EmptyField(field: heapless::String<HEAPLESS_STRING_LEN>) {from()}
+        Http(err: hyper::http::Error){
+            from()
+            display("HTTP Error: {err}")
+        }
+        Json(err: json::Error) {
+            from()
+            display("Json Error: {err}")
+        }
+        Hyper(err: hyper::Error) {
+            from()
+            display("Hyper Error: {err}")
+        }
+        Utf8(err: std::str::Utf8Error) {
+            from()
+            display("Error parsing UTF8: {err}")
+        }
+        JsonField(err: JsonFieldError) {
+            from()
+            display("{err}")
+        }
+        EmptyField(field: heapless::String<HEAPLESS_STRING_LEN>) {
+            from()
+            display("Empty field: {field}")
+        }
         UsernameTaken
+        {
+            display("USER_TAKEN")
+        }
         InvalidPost
-        Db(err: DbError) {from()}
+        {
+            display("Trying to comment on an invalid post")
+        }
+        Db(err: DbError) {
+            from()
+        }
         Internal
-        InvalidEndpoint
-        InvalidMethod
-        InvalidToken
-        InvalidId
-        NotAllowed
-        ColorParsingError(err: ColorParseError) {from()}
+        InvalidEndpoint{
+            display("HTTP method for this endpoint")
+        }
+        InvalidMethod{
+            display("Invalid HTTP method for this endpoint")
+        }
+        InvalidToken{
+            display("Invalid Token")
+        }
+        InvalidId{
+            display("Invalid ID provided")
+        }
+        NotAllowed{
+            display("naw bro")
+        }
+        ColorParsingError(err: ColorParseError) {
+            from()
+            display("{err}")
+        }
     }
 }
 
@@ -80,17 +119,13 @@ impl RequestError {
             Self::Internal => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
-
-    pub fn into_error_string(self) -> String {
-        todo!()
-    }
 }
 
 pub async fn handle_request(
     request: Request<hyper::body::Incoming>,
     addr: IpAddr,
     db: CommentDb,
-    shout_events: Sender<Arc<Shout>>,
+    shout_events: Sender<Arc<JoinedShout>>,
 ) -> RequestResult {
     let path = request.uri().path().to_owned();
     let result = match request.uri().path() {
@@ -116,7 +151,7 @@ pub async fn handle_request(
         Err(err) => {
             eprintln!("Error handling {addr}'s request on endpoint {path}: {err}");
             let status_code = err.status_code();
-            let error_string = err.into_error_string();
+            let error_string = format!("{err}");
 
             let json = object! {
                 error : error_string,

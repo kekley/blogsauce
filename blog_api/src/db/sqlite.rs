@@ -213,14 +213,26 @@ impl CommentDb {
         Ok(())
     }
 
-    pub fn get_shout_from_id<T: Into<ShoutId>>(&self, shout_id: T) -> Result<Shout, DbError> {
+    pub fn get_shout_by_id<T: Into<ShoutId>>(&self, shout_id: T) -> Result<Shout, DbError> {
         let shout_id = shout_id.into();
         let mut row = self
             .conn
-            .prepare(GET_SHOUT_WITH_ID)
+            .prepare(GET_SHOUT_BY_ID)
             .expect("Prepared statement for getting shout should be valid SQL");
 
         Ok(row.query_one((shout_id,), Shout::from_row)?)
+    }
+    pub fn get_joined_shout_by_id<T: Into<ShoutId>>(
+        &self,
+        shout_id: T,
+    ) -> Result<JoinedShout, DbError> {
+        let shout_id = shout_id.into();
+        let mut row = self
+            .conn
+            .prepare(GET_JOINED_SHOUT_BY_ID)
+            .expect("Prepared statement for getting shout should be valid SQL");
+
+        Ok(row.query_one((shout_id,), JoinedShout::from_row)?)
     }
 
     pub fn get_all_shouts(&self) -> Result<Vec<JoinedShout>, DbError> {

@@ -8,6 +8,12 @@ use crate::models::ip::TruncatedIp;
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UserId(i64);
 
+impl UserId {
+    pub fn inner(self) -> i64 {
+        self.0
+    }
+}
+
 impl FromSql for UserId {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
         Ok(UserId(value.as_i64()?))
@@ -63,8 +69,13 @@ pub struct Color(u32);
 quick_error! {
 #[derive(Debug)]
 pub enum ColorParseError {
-    MissingPrefix
-    IntParseError(err: ParseIntError){from()}
+    MissingPrefix{
+        display("Missing the # prefix on the color")
+    }
+    IntParseError(err: ParseIntError){
+        from()
+        display("Invalid color integer: {err}")
+    }
 }
 }
 

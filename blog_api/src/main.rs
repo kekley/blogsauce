@@ -1,5 +1,6 @@
 use async_broadcast::broadcast;
 use async_channel::unbounded;
+use blog_api::args::parse_settings_from_args;
 use blog_api::db::sqlite::CommentDb;
 use blog_api::server::endpoints::splashes::splash_file_watcher;
 use blog_api::server::handle_request;
@@ -9,11 +10,11 @@ use hyper::body::Incoming;
 use hyper::server::conn::http1::Builder;
 use hyper::service::service_fn;
 use json::JsonValue;
+use nano_get::NanoGetError;
 use smol::net::TcpListener;
 use smol::{future, spawn};
 use smol_hyper::rt::SmolTimer;
 use std::net::{IpAddr, SocketAddr};
-use std::path::PathBuf;
 use std::str::FromStr as _;
 use std::time::Duration;
 
@@ -39,15 +40,12 @@ fn main() {
 }
 
 async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let database_path: PathBuf = todo!();
-    let listen_port = todo!();
-    let json_posts_url: String = todo!();
-    let post_list_update_interval_secs = todo!();
-    let splashes_path: PathBuf = todo!();
+    let args = std::env::args_os().skip(1);
+    let settings = parse_settings_from_args(args)?;
 
-    let addr: SocketAddr = ([0, 0, 0, 0], listen_port).into();
+    let addr: SocketAddr = ([0, 0, 0, 0], settings.listen_port).into();
 
-    let db_connection_pool = CommentDb::create_db(&database_path);
+    let db_connection_pool = CommentDb::create_db(&settings.database_path);
 
     eprintln!("Connected to DB");
 
@@ -55,19 +53,19 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     eprintln!("Listening on {addr}");
 
-    if !json_posts_url.is_empty() {
-        eprintln!("Looking for post list json at: {json_posts_url}");
+    if let Some(posts_url) = settings.post_list_url {
+        eprintln!("Looking for post list json at: {}", posts_url);
         spawn(post_list_updater(
-            post_list_update_interval_secs,
-            json_posts_url,
+            3,
+            posts_url,
             CommentDb::from_pooled_conn(db_connection_pool.get().unwrap()),
         ))
         .detach();
     }
-    let _watcher = if !splashes_path.to_string_lossy().is_empty() {
-        eprintln!("Watching splashes file at {splashes_path:?}");
+    let _watcher = if !settings.splash_file_path.exists() {
+        eprintln!("Watching splashes file at {:?}", &settings.splash_file_path);
 
-        Some(splash_file_watcher(splashes_path))
+        Some(splash_file_watcher(settings.splash_file_path))
     } else {
         None
     };
@@ -138,6 +136,6 @@ async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb)
     }
 }
 
-async fn fetch_url(url: &str) -> Result<String, ()> {
-    todo!()
+async fn fetch_url(url: &str) -> Result<String, NanoGetError> {
+    nano_get::get(url)
 }

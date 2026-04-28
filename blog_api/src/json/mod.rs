@@ -1,13 +1,22 @@
+use quick_error::quick_error;
 pub const HEAPLESS_STRING_LEN: usize = 24;
 
+quick_error! {
 #[derive(Debug)]
 pub enum JsonFieldError {
-    MissingField(heapless::String<HEAPLESS_STRING_LEN>),
+    MissingField(field: heapless::String<HEAPLESS_STRING_LEN>)
+    {
+        display("Missing field: {field}")
+    }
     IncorrectType {
         field: heapless::String<HEAPLESS_STRING_LEN>,
         expected: heapless::String<HEAPLESS_STRING_LEN>,
         got: heapless::String<HEAPLESS_STRING_LEN>,
-    },
+    }
+    {
+        display("Incorrect Type for {field}. Expected {expected}, got {got}")
+    }
+}
 }
 
 pub trait MaybeJson<'a>: Sized {

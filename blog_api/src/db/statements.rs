@@ -70,7 +70,8 @@ pub const CREATE_SHOUTS_TABLE: &str = "CREATE TABLE IF NOT EXISTS shouts (
         created DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )";
-pub const GET_SHOUT_WITH_ID: &str = "SELECT * FROM shouts WHERE (id=?)";
+pub const GET_SHOUT_BY_ID: &str = "SELECT * FROM shouts WHERE (id=?)";
+pub const GET_JOINED_SHOUT_BY_ID: &str = "SELECT shouts.id, shouts.user_id, shouts.content, users.display_name, users.color, users.banned  FROM shouts INNER JOIN users ON users.id = shouts.user_id WHERE (shouts.id=?)";
 pub const GET_JOINED_SHOUTS: &str = "SELECT shouts.id, shouts.user_id, shouts.content, users.display_name, users.color, users.banned FROM shouts INNER JOIN users ON users.id = shouts.user_id";
 pub const INSERT_SHOUT_RETURNING_ID: &str =
     "INSERT INTO shouts (id,user_id,content) VALUES (NULL,?,?) RETURNING id";

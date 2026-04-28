@@ -12,7 +12,10 @@ pub struct ShoutId {
 }
 impl ShoutId {
     pub(crate) fn from_sqlite_row(row: &rusqlite::Row<'_>) -> Result<Self, rusqlite::Error> {
-        todo!()
+        Ok(ShoutId { inner: row.get(0)? })
+    }
+    pub(crate) fn inner(self) -> i64 {
+        self.inner
     }
 }
 
