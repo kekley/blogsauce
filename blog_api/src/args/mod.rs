@@ -46,7 +46,7 @@ impl SettingsBuilder {
             database_path: self.database_path.unwrap_or(DEFAULT_DB_PATH.into()),
             splash_file_path: self.splash_file_path.unwrap_or(DEFAULT_SPLASH_PATH.into()),
             listen_port: self.listen_port.unwrap_or(DEFAULT_PORT),
-            post_list_url: None,
+            post_list_url: self.post_list_url,
         }
     }
 }

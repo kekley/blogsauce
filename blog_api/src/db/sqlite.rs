@@ -269,7 +269,7 @@ impl CommentDb {
         Ok(())
     }
 
-    pub(crate) fn get_user_by_id(&self, user_id: UserId) -> Result<User, DbError> {
+    pub fn get_user_by_id(&self, user_id: UserId) -> Result<User, DbError> {
         let mut row = self
             .conn
             .prepare(GET_USER_BY_ID)

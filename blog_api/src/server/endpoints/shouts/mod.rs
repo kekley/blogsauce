@@ -15,7 +15,7 @@ use smol::Timer;
 use crate::{
     db::sqlite::CommentDb,
     json::extract_json_field,
-    models::{joins::shouts::JoinedShout, user::Color},
+    models::joins::shouts::JoinedShout,
     server::{
         RequestError, RequestResult,
         endpoints::{CONTENT_FIELD_NAME, SHOUT_ID_FIELD_NAME, TOKEN_FIELD_NAME},
@@ -149,17 +149,7 @@ pub(crate) async fn get_shouts_endpoint_post(
             let mut shouts_vec = Vec::with_capacity(shouts.len());
 
             for shout in shouts {
-                let mut shout_json = object! {};
-                let user = db.get_user_by_id(shout.get_user_id());
-                let (display_name, color) = user
-                    .as_ref()
-                    .map(|user| (user.get_display_name(), user.get_color()))
-                    .unwrap_or(("DELETED_USER", Color::WHITE));
-
-                shout_json["display_name"] = display_name.into();
-                shout_json["user_color"] = color.to_string().into();
-                shout_json["content"] = shout.get_content().into();
-                shout_json["id"] = shout.get_shout_id().into();
+                let mut shout_json = shout.to_json();
                 shout_json["editable"] = user_opt
                     .as_ref()
                     .is_some_and(|user| user.get_id() == shout.get_user_id())
@@ -207,7 +197,11 @@ pub(crate) async fn subscribe_shouts_endpoint_get(
                     .await;
                     match event {
                         Event::Msg(Ok(shout)) => {
-                            let json = shout.to_json();
+                            let mut json = shout.to_json();
+                            json["editable"] = user_opt
+                                .as_ref()
+                                .is_some_and(|user| user.get_id() == shout.get_user_id())
+                                .into();
 
                             yielder
                                 .r#yield(Ok::<Frame<Bytes>, Infallible>(Frame::data(Bytes::from(

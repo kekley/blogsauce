@@ -9,14 +9,13 @@ use hyper::Request;
 use hyper::body::Incoming;
 use hyper::server::conn::http1::Builder;
 use hyper::service::service_fn;
-use json::JsonValue;
-use nano_get::NanoGetError;
 use smol::net::TcpListener;
 use smol::{future, spawn};
 use smol_hyper::rt::SmolTimer;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr as _;
-use std::time::Duration;
+
+use crate::posts_update::post_list_updater;
 
 fn main() {
     eprintln!("Starting Server!");
@@ -56,13 +55,13 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if let Some(posts_url) = settings.post_list_url {
         eprintln!("Looking for post list json at: {}", posts_url);
         spawn(post_list_updater(
-            3,
+            600,
             posts_url,
             CommentDb::from_pooled_conn(db_connection_pool.get().unwrap()),
         ))
         .detach();
     }
-    let _watcher = if !settings.splash_file_path.exists() {
+    let _watcher = if settings.splash_file_path.exists() {
         eprintln!("Watching splashes file at {:?}", &settings.splash_file_path);
 
         Some(splash_file_watcher(settings.splash_file_path))
@@ -119,23 +118,61 @@ async fn server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 }
 
-async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb) {
-    loop {
-        //TODO have a channel for signaling that a post fetch failed so we can try a refresh before
-        // returning an error
-        if let Ok(str) = fetch_url(&json_posts_url).await
-            && let Ok(json) = json::parse(&str)
-            && let JsonValue::Array(posts) = &json["posts"]
-        {
-            let posts_str = posts.iter().flat_map(|v| v.as_str());
-            eprintln!("Updated post list");
+mod posts_update {
+    use std::time::Duration;
 
-            db.update_posts(posts_str);
+    use blog_api::db::sqlite::CommentDb;
+    use json::JsonValue;
+    use quick_error::quick_error;
+    type StackString = heapless::String<512, u16>;
+
+    pub async fn post_list_updater(interval: u32, json_posts_url: String, db: CommentDb) {
+        eprintln!("Starting post list watch");
+        loop {
+            //TODO have a channel for signaling that a post fetch failed so we can try a refresh before
+            // returning an error
+            if let Ok(str) = fetch_url(&json_posts_url).await
+                && let Ok(json) = json::parse(str.lines().next().unwrap_or_default())
+                && let JsonValue::Array(posts) = &json["posts"]
+            {
+                let posts_str = posts.iter().flat_map(|v| v.as_str());
+                eprintln!("Updated post list");
+
+                db.update_posts(posts_str);
+            }
+            smol::Timer::interval(Duration::from_secs(interval.into())).await;
         }
-        smol::Timer::interval(Duration::from_secs(interval.into())).await;
     }
-}
+    quick_error! {
+        #[derive(Debug)]
+        pub enum FetchError{
+            Request(err:ureq::Error){
+                from()
+            }
+            UrlLength
+        }
+    }
 
-async fn fetch_url(url: &str) -> Result<String, NanoGetError> {
-    nano_get::get(url)
+    async fn fetch_url(url: &str) -> Result<String, FetchError> {
+        let owned_url = StackString::try_from(url).map_err(|_| FetchError::UrlLength)?;
+        let a = smol::unblock(move || {
+            let r = ureq::get(owned_url.as_str())
+                .call()
+                .map(|mut response| response.body_mut().read_to_string())??;
+            Ok(r)
+        });
+        a.await
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_fetch() {
+            const URL: &str = "https://blog.kekley.online/post_list";
+            let res = smol::block_on(fetch_url(URL)).unwrap();
+            println!("{res}");
+        }
+    }
 }

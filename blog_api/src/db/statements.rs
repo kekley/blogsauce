@@ -8,7 +8,6 @@ pub const CREATE_USER_TABLE: &str = "CREATE TABLE IF NOT EXISTS users(
         associated_ip INTEGER NOT NULL,
         UNIQUE (display_name COLLATE NOCASE)
         UNIQUE (token COLLATE NOCASE)
-        FOREIGN KEY (associated_ip) REFERENCES ips(id)
     )";
 pub const GET_USER_BY_TOKEN: &str = "SELECT * FROM users WHERE LOWER(token) LIKE LOWER(?)";
 pub const GET_USER_BY_ID: &str = "SELECT * FROM users WHERE id=?";

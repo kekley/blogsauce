@@ -47,6 +47,7 @@ pub fn splash_file_watcher(mut file_path: PathBuf) -> Hotwatch {
     SPLASHES
         .set_blocking(RwLock::new(splashes))
         .expect("Could not initialize splash text");
+    eprintln!("{:?}", SPLASHES.wait_blocking());
     //Watch the folder instead of the file to get around some weird behavior
     file_path.pop();
     file_watcher
